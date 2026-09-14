@@ -1,3 +1,6 @@
+use crate::elements::{Hittable, Light, Sphere};
+use crate::maths::{Hit, Ray, Vec3};
+
 #[derive(Debug)]
 pub enum ObjType {
     LIGHT,
@@ -31,13 +34,6 @@ pub struct Point {
 // }
 
 #[derive(Debug)]
-pub struct Vec3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-#[derive(Debug)]
 pub struct Object {
     pub obj_type: ObjType,
     pub scale: u8,
@@ -46,15 +42,34 @@ pub struct Object {
 }
 
 pub struct Scene {
-    pub spot_lights: Vec<Object>,
-    pub spheres: Vec<Object>,
-    pub planes: Vec<Object>,
-    pub cylinders: Vec<Object>,
-    pub cones: Vec<Object>,
+    pub objects: Vec<Box<dyn Hittable>>,
+    pub lights: Vec<Light>,
 }
 
 impl Default for Scene {
     fn default() -> Self {
-        unimplemented!("implement default scene");
+        Scene {
+            objects: Vec::new(),
+            lights: Vec::new(),
+        }
+    }
+}
+
+impl Scene {
+    pub fn intersect(&self, ray: &Ray) -> Option<Hit> {
+        let mut closest_hit: Option<Hit> = None;
+
+        for object in &self.objects {
+            if let Some(hit) = object.intersect(ray) {
+                let is_closer = match &closest_hit {
+                    None => true,
+                    Some(current) => hit.t < current.t,
+                };
+                if is_closer {
+                    closest_hit = Some(hit);
+                };
+            }
+        }
+        closest_hit
     }
 }

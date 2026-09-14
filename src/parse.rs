@@ -3,8 +3,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use crate::constants::SCENE_FILE_EXTENSION;
+use crate::elements::{Light, Material, Plane, Sphere};
 use crate::error::MiniRtErr;
-use crate::scene::{ObjType, Object, Point, Scene, Vec3};
+use crate::maths::{Color, Vec3};
+use crate::scene::{ObjType, Object, Point, Scene};
 
 pub fn generate_default_scene() -> Scene {
     unimplemented!("generating a default scene"); // TODO
@@ -13,35 +15,6 @@ pub fn generate_default_scene() -> Scene {
 // pub fn parse_point(word: &str) -> Point {
 //     let nums = word.split()
 // }
-
-pub fn parse_sphere_line(words: &Vec<&str>) -> Object {
-    if words.len() != 4 {
-        panic!("invalid number of words for SP");
-    }
-    let position_axes: Vec<&str> = words[2].split(',').collect();
-    if position_axes.len() != 3 {
-        panic!("invalid number of arguments for SP Position");
-    }
-    let direction_axes: Vec<&str> = words[3].split(',').collect();
-    if direction_axes.len() != 3 {
-        panic!("invalid number of arguments for SP Direction");
-    }
-    let obj = Object {
-        obj_type: ObjType::SPHERE,
-        scale: words[1].parse().unwrap_or(1),
-        position: Point {
-            x: position_axes[0].parse().unwrap_or(0.0),
-            y: position_axes[1].parse().unwrap_or(0.0),
-            z: position_axes[2].parse().unwrap_or(0.0),
-        },
-        direction: Vec3 {
-            x: direction_axes[0].parse().unwrap_or(0.0),
-            y: direction_axes[1].parse().unwrap_or(0.0),
-            z: direction_axes[2].parse().unwrap_or(0.0),
-        },
-    };
-    obj
-}
 
 pub fn parse_cylinder_line(words: &Vec<&str>) -> Object {
     if words.len() != 4 {
@@ -57,35 +30,6 @@ pub fn parse_cylinder_line(words: &Vec<&str>) -> Object {
     }
     let obj = Object {
         obj_type: ObjType::CYLINDER,
-        scale: words[1].parse().unwrap_or(1),
-        position: Point {
-            x: position_axes[0].parse().unwrap_or(0.0),
-            y: position_axes[1].parse().unwrap_or(0.0),
-            z: position_axes[2].parse().unwrap_or(0.0),
-        },
-        direction: Vec3 {
-            x: direction_axes[0].parse().unwrap_or(0.0),
-            y: direction_axes[1].parse().unwrap_or(0.0),
-            z: direction_axes[2].parse().unwrap_or(0.0),
-        },
-    };
-    obj
-}
-
-pub fn parse_plane_line(words: &Vec<&str>) -> Object {
-    if words.len() != 4 {
-        panic!("invalid number of words for PL");
-    }
-    let position_axes: Vec<&str> = words[2].split(',').collect();
-    if position_axes.len() != 3 {
-        panic!("invalid number of arguments for PL Position");
-    }
-    let direction_axes: Vec<&str> = words[3].split(',').collect();
-    if direction_axes.len() != 3 {
-        panic!("invalid number of arguments for PL Direction");
-    }
-    let obj = Object {
-        obj_type: ObjType::PLANE,
         scale: words[1].parse().unwrap_or(1),
         position: Point {
             x: position_axes[0].parse().unwrap_or(0.0),
@@ -130,24 +74,113 @@ pub fn parse_cone_line(words: &Vec<&str>) -> Object {
     obj
 }
 
+pub fn parse_sphere_line(words: &Vec<&str>) -> Sphere {
+    // TODO validate color boundaries. show how to use arguments for each element
+
+    if words.len() != 4 {
+        panic!("invalid number of words for SP");
+    }
+    let position_axes: Vec<&str> = words[2].split(',').collect();
+    if position_axes.len() != 3 {
+        panic!("invalid number of arguments for SP Position");
+    }
+    let colors: Vec<&str> = words[3].split(',').collect();
+    if colors.len() != 3 {
+        panic!("invalid number of arguments for SP Color");
+    }
+    Sphere {
+        radius: words[1].parse().unwrap_or(1.0),
+        center: Vec3 {
+            x: position_axes[0].parse().unwrap_or(0.0),
+            y: position_axes[1].parse().unwrap_or(0.0),
+            z: position_axes[2].parse().unwrap_or(0.0),
+        },
+        material: Material {
+            color: Color {
+                r: colors[0].parse().unwrap_or(0),
+                g: colors[1].parse().unwrap_or(0),
+                b: colors[2].parse().unwrap_or(0),
+            },
+        },
+    }
+}
+
+pub fn parse_plane_line(words: &Vec<&str>) -> Plane {
+    if words.len() != 4 {
+        panic!("invalid number of words for PL");
+    }
+    let point_axes: Vec<&str> = words[1].split(',').collect();
+    if point_axes.len() != 3 {
+        panic!("invalid number of arguments for PL Position");
+    }
+    let normal_axes: Vec<&str> = words[2].split(',').collect();
+    if normal_axes.len() != 3 {
+        panic!("invalid number of arguments for PL Direction");
+    }
+    let colors: Vec<&str> = words[3].split(',').collect();
+    if colors.len() != 3 {
+        panic!("invalid number of arguments for PL Color");
+    }
+    Plane {
+        point: Vec3 {
+            x: point_axes[0].parse().unwrap_or(0.0),
+            y: point_axes[1].parse().unwrap_or(0.0),
+            z: point_axes[2].parse().unwrap_or(0.0),
+        },
+        normal: Vec3 {
+            x: normal_axes[0].parse().unwrap_or(0.0),
+            y: normal_axes[1].parse().unwrap_or(0.0),
+            z: normal_axes[2].parse().unwrap_or(0.0),
+        },
+        material: Material {
+            color: Color {
+                r: colors[0].parse().unwrap_or(0),
+                g: colors[1].parse().unwrap_or(0),
+                b: colors[2].parse().unwrap_or(0),
+            },
+        },
+    }
+}
+
+pub fn parse_light_line(words: &Vec<&str>) -> Light {
+    if words.len() != 2 {
+        panic!("invalid number of words for LIGHT");
+    }
+    let position_axes: Vec<&str> = words[1].split(',').collect();
+    if position_axes.len() != 3 {
+        panic!("invalid number of arguments for LIGHT Position");
+    }
+    Light {
+        position: Vec3 {
+            x: position_axes[0].parse().unwrap_or(0.0),
+            y: position_axes[1].parse().unwrap_or(0.0),
+            z: position_axes[2].parse().unwrap_or(0.0),
+        },
+    }
+}
+
 pub fn parse_line(line: String, scene: &mut Scene) {
     let words: Vec<&str> = line.split_whitespace().collect();
+    if words[0] == "LIGHT" {
+        let light = parse_light_line(&words);
+        scene.lights.push(light);
+    }
     if words[0] == "SP" {
         let sphere = parse_sphere_line(&words);
-        scene.spheres.push(sphere);
+        scene.objects.push(Box::new(sphere));
     }
     if line.starts_with("PL") {
         let plane = parse_plane_line(&words);
-        scene.planes.push(plane);
+        scene.objects.push(Box::new(plane));
     }
-    if line.starts_with("CY") {
-        let cylinder = parse_cylinder_line(&words);
-        scene.cylinders.push(cylinder);
-    }
-    if line.starts_with("CO") {
-        let cone = parse_cone_line(&words);
-        scene.cones.push(cone);
-    }
+    // if line.starts_with("CY") {
+    //     let cylinder = parse_cylinder_line(&words);
+    //     scene.cylinders.push(cylinder);
+    // }
+    // if line.starts_with("CO") {
+    //     let cone = parse_cone_line(&words);
+    //     scene.cones.push(cone);
+    // }
 }
 
 pub fn parse_scene_file() -> Result<Scene, MiniRtErr> {

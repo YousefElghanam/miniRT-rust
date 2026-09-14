@@ -1,16 +1,22 @@
-use crate::render::App;
-use winit::dpi::PhysicalPosition;
-use winit::event::{ElementState, KeyEvent, MouseButton};
-use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::{
+    dpi::PhysicalPosition,
+    event::{ElementState, KeyEvent, MouseButton},
+    event_loop::ActiveEventLoop,
+    keyboard::{KeyCode, PhysicalKey},
+};
 
 use crate::camera;
+use crate::render::App;
 
 pub struct Input {
-    pub forward: bool,
-    pub backward: bool,
-    pub left: bool,
-    pub right: bool,
+    pub arrow_up: bool,
+    pub arrow_down: bool,
+    pub arrow_left: bool,
+    pub arrow_right: bool,
+    pub key_w: bool,
+    pub key_a: bool,
+    pub key_s: bool,
+    pub key_d: bool,
 
     pub mouse_x: f64,
     pub mouse_y: f64,
@@ -23,10 +29,14 @@ pub struct Input {
 impl Default for Input {
     fn default() -> Self {
         Self {
-            forward: false,
-            backward: false,
-            left: false,
-            right: false,
+            arrow_up: false,
+            arrow_down: false,
+            arrow_left: false,
+            arrow_right: false,
+            key_w: false,
+            key_a: false,
+            key_s: false,
+            key_d: false,
             mouse_x: 0.0,
             mouse_y: 0.0,
             mouse_delta_x: 0.0,
@@ -48,10 +58,14 @@ pub fn handle_keyboard_input(app: &mut App, event: KeyEvent, event_loop: &Active
                     println!("exiting");
                     event_loop.exit();
                 }
-                KeyCode::ArrowUp => app.input.forward = event.state == ElementState::Pressed,
-                KeyCode::ArrowDown => app.input.backward = event.state == ElementState::Pressed,
-                KeyCode::ArrowLeft => app.input.left = event.state == ElementState::Pressed,
-                KeyCode::ArrowRight => app.input.right = event.state == ElementState::Pressed,
+                KeyCode::ArrowUp => app.input.arrow_up = event.state == ElementState::Pressed,
+                KeyCode::ArrowDown => app.input.arrow_down = event.state == ElementState::Pressed,
+                KeyCode::ArrowLeft => app.input.arrow_left = event.state == ElementState::Pressed,
+                KeyCode::ArrowRight => app.input.arrow_right = event.state == ElementState::Pressed,
+                KeyCode::KeyW => app.input.key_w = event.state == ElementState::Pressed,
+                KeyCode::KeyA => app.input.key_a = event.state == ElementState::Pressed,
+                KeyCode::KeyS => app.input.key_s = event.state == ElementState::Pressed,
+                KeyCode::KeyD => app.input.key_d = event.state == ElementState::Pressed,
                 _ => {}
             }
         }

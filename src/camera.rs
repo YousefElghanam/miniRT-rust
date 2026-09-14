@@ -1,5 +1,5 @@
 use crate::input::Input;
-use crate::scene::Vec3;
+use crate::maths::Vec3;
 
 pub struct Camera {
     sensetivity: f32,
