@@ -1,4 +1,4 @@
-use crate::elements::{Hittable, Light, Sphere};
+use crate::elements::{Hittable, Light};
 use crate::maths::{Hit, Ray, Vec3};
 
 #[derive(Debug)]

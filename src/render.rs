@@ -3,17 +3,17 @@ use std::io::Write;
 use std::sync::Arc;
 use std::time::Instant;
 
-use pixels::{Pixels, SurfaceTexture};
+use pixels::{Pixels, SurfaceTexture, wgpu::wgc::command::EncoderStateError::Locked};
 use winit::{
     application::ApplicationHandler,
-    event::WindowEvent,
+    event::{DeviceEvent, WindowEvent},
     event_loop::{self, ActiveEventLoop},
     window::Window,
 };
 
 use crate::camera::Camera;
 use crate::constants::{AMBIENT, PPM_HEIGHT, PPM_WIDTH};
-use crate::elements::{Hittable, Light, Sphere};
+use crate::elements::Light;
 use crate::input;
 use crate::input::Input;
 use crate::maths::{Color, Hit, Ray, Vec3};
@@ -66,34 +66,34 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    fn ray_for_pixel(&mut self, x: u32, y: u32) -> Ray {
+    fn ray_for_pixel(&mut self, x: u32, y: u32, camera: &Camera) -> Ray {
         let u = (x as f32 + 0.5) / self.width as f32;
         let v = (y as f32 + 0.5) / self.height as f32;
 
-        let screen_x = u * 2.0 - 1.0;
-        let screen_y = 1.0 - v * 2.0;
+        let aspect_ratio = self.width as f32 / self.height as f32;
 
-        let direction = Vec3 {
-            x: screen_x,
-            y: screen_y,
-            z: -1.0,
-        }
-        .normalize();
+        let fov = camera.fov.to_radians();
+        let scale = (fov / 2.0).tan();
 
+        let screen_x = (u * 2.0 - 1.0) * aspect_ratio * scale;
+        let screen_y = 1.0 - v * 2.0 * scale;
+
+        let (forward, right, up) = camera.basis();
+
+        let direction = forward
+            .add(right.scale(screen_x))
+            .add(up.scale(screen_y))
+            .normalize();
         Ray {
-            origin: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            origin: camera.position,
             direction,
         }
     }
-    fn render(&mut self, scene: &Scene) -> Vec<Color> {
+    fn render(&mut self, scene: &Scene, camera: &Camera) -> Vec<Color> {
         let mut pixels = Vec::new();
         for y in 0..PPM_HEIGHT {
             for x in 0..PPM_WIDTH {
-                let ray = self.ray_for_pixel(x, y);
+                let ray = self.ray_for_pixel(x, y, camera);
 
                 let color = match scene.intersect(&ray) {
                     Some(hit) => {
@@ -124,45 +124,52 @@ pub fn save_ppm(pixels: &Vec<Color>) {
     }
 }
 
+fn move_object(app: &mut App, dt: f32) {
+    let mut movement = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    let speed = 2.0;
+    if app.input.super_left && app.input.arrow_up {
+        movement.z -= speed * dt;
+    }
+    if app.input.super_left && app.input.arrow_down {
+        movement.z += speed * dt;
+    }
+    if app.input.arrow_up && !app.input.super_left {
+        movement.y += speed * dt;
+    }
+    if app.input.arrow_down && !app.input.super_left {
+        movement.y -= speed * dt;
+    }
+    if app.input.arrow_left {
+        movement.x -= speed * dt;
+    }
+    if app.input.arrow_right {
+        movement.x += speed * dt;
+    }
+    if let Some(object) = app.scene.objects.first_mut() {
+        let prev_pos = object.position();
+        object.set_position(prev_pos.add(movement));
+    }
+}
+
 impl App {
     fn update(&mut self, dt: f32) {
-        self.player.x += self.player.speed * dt;
+        move_object(self, dt);
+
+        let camera_movement = self.camera.movement(&self.input, 2.0, dt);
+        self.camera.position = self.camera.position.add(camera_movement);
+
         self.camera.update(&self.input); // RECHECK THE ARGUMENT TYPE HERE LATER
+
+        self.player.x += self.player.speed * dt;
         self.input.mouse_delta_x = 0.0;
         self.input.mouse_delta_y = 0.0;
-        let sphere = self.scene.objects.first_mut().unwrap();
-        let old_pos = sphere.position();
-        if self.input.arrow_up {
-            sphere.set_position(old_pos.add(Vec3 {
-                x: 0.0,
-                y: 0.05,
-                z: 0.0,
-            }));
-        }
-        if self.input.arrow_down {
-            sphere.set_position(old_pos.add(Vec3 {
-                x: 0.0,
-                y: -0.05,
-                z: 0.0,
-            }));
-        }
-        if self.input.arrow_left {
-            sphere.set_position(old_pos.add(Vec3 {
-                x: -0.05,
-                y: 0.0,
-                z: 0.0,
-            }));
-        }
-        if self.input.arrow_right {
-            sphere.set_position(old_pos.add(Vec3 {
-                x: 0.05,
-                y: 0.0,
-                z: 0.0,
-            }));
-        }
     }
     fn render(&mut self) {
-        let pixels = self.renderer.render(&self.scene);
+        let pixels = self.renderer.render(&self.scene, &self.camera);
         if let Some(frame) = self.pixels.as_mut() {
             let frame_buffer = frame.frame_mut();
             for (i, color) in pixels.iter().enumerate() {
@@ -221,6 +228,10 @@ impl ApplicationHandler for App {
                 )
                 .unwrap(),
         );
+        window.set_cursor_visible(false);
+        window
+            .set_cursor_grab(winit::window::CursorGrabMode::Locked)
+            .ok();
         let surface_texture =
             SurfaceTexture::new(self.renderer.width, self.renderer.height, window.clone());
         let pixels =
@@ -239,7 +250,7 @@ impl ApplicationHandler for App {
             WindowEvent::KeyboardInput { event, .. } => {
                 input::handle_keyboard_input(self, event, event_loop)
             }
-            WindowEvent::CursorMoved { position, .. } => input::handle_cursor_move(self, position),
+            // WindowEvent::CursorMoved { position, .. } => input::handle_cursor_move(self, position),
             // The game loop
             WindowEvent::RedrawRequested => {
                 handle_redraw_request(self);
@@ -249,6 +260,20 @@ impl ApplicationHandler for App {
             //     state,
             //     button,
             // } => input::handle_mouse_input(self, state, button),
+            _ => {}
+        }
+    }
+    fn device_event(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        _device_id: winit::event::DeviceId,
+        event: DeviceEvent,
+    ) {
+        match event {
+            DeviceEvent::MouseMotion { delta } => {
+                self.input.mouse_delta_x += delta.0;
+                self.input.mouse_delta_y += delta.1;
+            }
             _ => {}
         }
     }
