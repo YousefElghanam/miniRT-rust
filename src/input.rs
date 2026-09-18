@@ -16,6 +16,10 @@ pub struct Input {
     pub key_a: bool,
     pub key_s: bool,
     pub key_d: bool,
+    pub key_o: bool,
+    pub res_up_pressed: bool,
+    pub res_down_pressed: bool,
+    pub key_l: bool,
 
     pub mouse_x: f64,
     pub mouse_y: f64,
@@ -35,6 +39,10 @@ impl Default for Input {
             key_a: false,
             key_s: false,
             key_d: false,
+            key_o: false,
+            res_up_pressed: false,
+            res_down_pressed: false,
+            key_l: false,
             mouse_x: 0.0,
             mouse_y: 0.0,
             mouse_delta_x: 0.0,
@@ -46,9 +54,9 @@ impl Default for Input {
 pub fn handle_keyboard_input(app: &mut App, event: KeyEvent, event_loop: &ActiveEventLoop) {
     match event.physical_key {
         PhysicalKey::Code(key) => {
-            if event.state == ElementState::Pressed {
-                println!("{:?}", key);
-            }
+            // if event.state == ElementState::Pressed {
+            //     println!("{:?}", key);
+            // }
             match key {
                 KeyCode::Escape => {
                     println!("exiting");
@@ -63,6 +71,14 @@ pub fn handle_keyboard_input(app: &mut App, event: KeyEvent, event_loop: &Active
                 KeyCode::KeyA => app.input.key_a = event.state == ElementState::Pressed,
                 KeyCode::KeyS => app.input.key_s = event.state == ElementState::Pressed,
                 KeyCode::KeyD => app.input.key_d = event.state == ElementState::Pressed,
+                KeyCode::KeyO => {
+                    app.input.key_o = event.state == ElementState::Pressed;
+                    app.input.res_up_pressed = true
+                }
+                KeyCode::KeyL => {
+                    app.input.key_l = event.state == ElementState::Pressed;
+                    app.input.res_down_pressed = true;
+                }
                 _ => {}
             }
         }

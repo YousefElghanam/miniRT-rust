@@ -5,6 +5,7 @@ use std::io::{BufRead, BufReader};
 use crate::constants::SCENE_FILE_EXTENSION;
 use crate::elements::{Light, Material, Plane, Sphere};
 use crate::error::MiniRtErr;
+use crate::maths::build_bvh;
 use crate::maths::{Color, Vec3};
 use crate::scene::{ObjType, Object, Point, Scene};
 
@@ -202,7 +203,27 @@ pub fn parse_scene_file() -> Result<Scene, MiniRtErr> {
                 }
                 parse_line(line, &mut scene);
             }
-            return Ok(scene);
+            let mut bounded_objects = Vec::new();
+            let mut unbounded_objects = Vec::new();
+
+            for object in scene.objects {
+                if object.bounding_box().is_some() {
+                    bounded_objects.push(object);
+                } else {
+                    unbounded_objects.push(object);
+                }
+            }
+            let bvh = if bounded_objects.is_empty() {
+                None
+            } else {
+                Some(build_bvh(bounded_objects))
+            };
+            return Ok(Scene {
+                bvh,
+                unbounded_objects,
+                objects: Vec::new(),
+                lights: scene.lights,
+            });
         }
         Err(_) => Err(MiniRtErr::InvalidSceneFile),
     }

@@ -11,13 +11,13 @@ use winit::{
     window::Window,
 };
 
-use crate::camera::Camera;
-use crate::constants::{AMBIENT, PPM_HEIGHT, PPM_WIDTH};
+use crate::constants::{AMBIENT, RENDER_RES_H, RENDER_RES_W, WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::elements::Light;
 use crate::input;
 use crate::input::Input;
 use crate::maths::{Color, Hit, Ray, Vec3};
 use crate::scene::Scene;
+use crate::{camera::Camera, constants::RENDER_ASPECT_RATIO};
 
 pub struct Player {
     x: f32,
@@ -31,6 +31,7 @@ pub struct App {
     pub pixels: Option<Pixels<'static>>,
     pub input: Input,
     pub camera: Camera,
+    pub needs_render: bool,
     pub player: Player,
 
     pub frame_count: u64,
@@ -50,6 +51,11 @@ pub fn calculate_lighting(hit: &Hit, light: &Light, scene: &Scene) -> f32 {
     let shadow_ray = Ray {
         origin: shadow_origin,
         direction: light_direction,
+        inv_direction: Vec3 {
+            x: 1.0 / light_direction.x,
+            y: 1.0 / light_direction.y,
+            z: 1.0 / light_direction.z,
+        },
     };
     if let Some(shadow_hit) = scene.intersect(&shadow_ray) {
         if shadow_hit.t < light_distance {
@@ -59,10 +65,11 @@ pub fn calculate_lighting(hit: &Hit, light: &Light, scene: &Scene) -> f32 {
     hit.normal.dot(light_direction).max(0.0)
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Renderer {
     width: u32,
     height: u32,
+    frame_buffer: Vec<u8>,
 }
 
 impl Renderer {
@@ -79,7 +86,6 @@ impl Renderer {
         let screen_y = 1.0 - v * 2.0 * scale;
 
         let (forward, right, up) = camera.basis();
-
         let direction = forward
             .add(right.scale(screen_x))
             .add(up.scale(screen_y))
@@ -87,13 +93,25 @@ impl Renderer {
         Ray {
             origin: camera.position,
             direction,
+            inv_direction: Vec3 {
+                x: 1.0 / direction.x,
+                y: 1.0 / direction.y,
+                z: 1.0 / direction.z,
+            },
         }
     }
-    fn render(&mut self, scene: &Scene, camera: &Camera) -> Vec<Color> {
-        let mut pixels = Vec::new();
-        for y in 0..PPM_HEIGHT {
-            for x in 0..PPM_WIDTH {
+    fn render(&mut self, scene: &Scene, camera: &Camera) {
+        let mut intersection_time = 0.0;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let index = ((y * self.width + x) * 4) as usize;
+
+                // let start = Instant::now();
                 let ray = self.ray_for_pixel(x, y, camera);
+                // let intersection_time = start.elapsed().as_secs_f64() * 1000.0;
+                // println!("ray_for_pixel() time: {:.2}", intersection_time);
+
+                let start = Instant::now();
 
                 let color = match scene.intersect(&ray) {
                     Some(hit) => {
@@ -104,23 +122,22 @@ impl Renderer {
                     }
                     None => Color { r: 0, g: 0, b: 0 },
                 };
-                pixels.push(color);
+
+                intersection_time += start.elapsed().as_secs_f64() * 1000.0;
+
+                self.frame_buffer[index] = color.r;
+                self.frame_buffer[index + 1] = color.g;
+                self.frame_buffer[index + 2] = color.b;
+                self.frame_buffer[index + 3] = 255;
             }
         }
-        pixels
         // println!("rendering...");
+        println!("Accumalted intersections time: {:.2}", intersection_time);
     }
-}
-
-pub fn save_ppm(pixels: &Vec<Color>) {
-    let mut file = File::create("output.ppm").unwrap();
-
-    writeln!(file, "P3").unwrap();
-    writeln!(file, "{} {}", PPM_WIDTH, PPM_HEIGHT).unwrap();
-    writeln!(file, "255").unwrap();
-
-    for &pixel in pixels {
-        writeln!(file, "{} {} {}", pixel.r, pixel.g, pixel.b).unwrap();
+    fn resize(&mut self, width: u32, height: u32) {
+        self.width = width;
+        self.height = height;
+        self.frame_buffer.resize((width * height * 4) as usize, 0);
     }
 }
 
@@ -153,13 +170,56 @@ fn move_object(app: &mut App, dt: f32) {
         let prev_pos = object.position();
         object.set_position(prev_pos.add(movement));
     }
+    app.needs_render = movement.length() > 0.0;
+}
+
+fn change_resolution(app: &mut App) {
+    if app.input.key_o && app.input.super_left {
+        // app.renderer.increase_resolution();
+        let new_width = (app.renderer.width as f32 * 1.2) as u32;
+        let new_height = (new_width as f32 / RENDER_ASPECT_RATIO) as u32;
+        if new_width > 2000 {
+            return;
+        }
+        app.renderer.resize(new_width, new_height);
+        if let Some(pixels) = app.pixels.as_mut() {
+            pixels.resize_buffer(new_width, new_height).unwrap();
+        }
+        println!("W:({}) H:({})", new_width, new_height);
+    } else if app.input.key_l && app.input.super_left {
+        // app.renderer.increase_resolution();
+        let new_width = (app.renderer.width as f32 * 0.8) as u32;
+        let new_height = (new_width as f32 / RENDER_ASPECT_RATIO) as u32;
+        if new_width < 60 {
+            return;
+        }
+        app.renderer.resize(new_width, new_height);
+        if let Some(pixels) = app.pixels.as_mut() {
+            pixels.resize_buffer(new_width, new_height).unwrap();
+        }
+        println!("W:({}) H:({})", new_width, new_height);
+    }
 }
 
 impl App {
     fn update(&mut self, dt: f32) {
         move_object(self, dt);
+        if self.input.res_up_pressed || self.input.res_down_pressed {
+            change_resolution(self);
+            self.input.res_down_pressed = false;
+            self.input.res_up_pressed = false;
+        }
 
         let camera_movement = self.camera.movement(&self.input, 2.0, dt);
+
+        if !self.needs_render {
+            self.needs_render = camera_movement.length() > 0.0
+                || self.input.mouse_delta_x != 0.0
+                || self.input.mouse_delta_y != 0.0;
+        }
+        if let Some(window) = self.window.as_ref() {
+            window.request_redraw();
+        }
         self.camera.position = self.camera.position.add(camera_movement);
 
         self.camera.update(&self.input); // RECHECK THE ARGUMENT TYPE HERE LATER
@@ -169,17 +229,17 @@ impl App {
         self.input.mouse_delta_y = 0.0;
     }
     fn render(&mut self) {
-        let pixels = self.renderer.render(&self.scene, &self.camera);
-        if let Some(frame) = self.pixels.as_mut() {
-            let frame_buffer = frame.frame_mut();
-            for (i, color) in pixels.iter().enumerate() {
-                let index = i * 4;
-                frame_buffer[index] = color.r;
-                frame_buffer[index + 1] = color.g;
-                frame_buffer[index + 2] = color.b;
-                frame_buffer[index + 3] = 255;
+        if self.needs_render {
+            let start = Instant::now();
+            self.renderer.render(&self.scene, &self.camera);
+            if let Some(frame) = self.pixels.as_mut() {
+                let frame_buffer = frame.frame_mut();
+                frame_buffer.copy_from_slice(&self.renderer.frame_buffer);
+                frame.render().unwrap();
             }
-            frame.render().unwrap();
+            let render_time = start.elapsed().as_secs_f64() * 1000.0;
+            println!("Frametime: {:.2} ms", render_time);
+            self.needs_render = false;
         }
     }
 }
@@ -221,17 +281,14 @@ impl ApplicationHandler for App {
                 .create_window(
                     Window::default_attributes()
                         .with_title("engmaxxx")
-                        .with_inner_size(winit::dpi::LogicalSize::new(
-                            self.renderer.width,
-                            self.renderer.height,
-                        )),
+                        .with_inner_size(winit::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT)),
                 )
                 .unwrap(),
         );
-        window.set_cursor_visible(false);
-        window
-            .set_cursor_grab(winit::window::CursorGrabMode::Locked)
-            .ok();
+        // window.set_cursor_visible(false);
+        // window
+        //     .set_cursor_grab(winit::window::CursorGrabMode::Locked)
+        //     .ok();
         let surface_texture =
             SurfaceTexture::new(self.renderer.width, self.renderer.height, window.clone());
         let pixels =
@@ -250,19 +307,22 @@ impl ApplicationHandler for App {
             WindowEvent::KeyboardInput { event, .. } => {
                 input::handle_keyboard_input(self, event, event_loop)
             }
-            // WindowEvent::CursorMoved { position, .. } => input::handle_cursor_move(self, position),
-            // The game loop
             WindowEvent::RedrawRequested => {
                 handle_redraw_request(self);
             }
-            // WindowEvent::MouseInput {
-            //     device_id,
-            //     state,
-            //     button,
-            // } => input::handle_mouse_input(self, state, button),
+            WindowEvent::Resized(size) => {
+                println!("W:({}) H:({})", size.width, size.height);
+                if size.width == 0 || size.height == 0 {
+                    return;
+                }
+                if let Some(pixels) = self.pixels.as_mut() {
+                    pixels.resize_surface(size.width, size.height).unwrap();
+                }
+            }
             _ => {}
         }
     }
+
     fn device_event(
         &mut self,
         _event_loop: &ActiveEventLoop,
@@ -284,13 +344,15 @@ pub fn render(scene: Scene) {
     let mut app = App {
         scene: scene,
         renderer: Renderer {
-            width: PPM_WIDTH,
-            height: PPM_HEIGHT,
+            width: RENDER_RES_W,
+            height: RENDER_RES_H,
+            frame_buffer: vec![0; (RENDER_RES_W * RENDER_RES_H * 4) as usize],
         },
         window: None,
         pixels: None,
         input: Input::default(),
         camera: Camera::default(),
+        needs_render: false,
         player: Player { x: 0.0, speed: 5.0 },
         frame_count: 0,
         last_fps_update: Instant::now(),

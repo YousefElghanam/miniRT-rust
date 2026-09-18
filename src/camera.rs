@@ -16,7 +16,7 @@ impl Camera {
         self.pitch = self
             .pitch
             .clamp(-std::f32::consts::FRAC_2_PI, std::f32::consts::FRAC_2_PI);
-        println!("camera: yaw({}) == pitch({})", self.yaw, self.pitch);
+        // println!("camera: yaw({}) == pitch({})", self.yaw, self.pitch);
     }
     pub fn basis(&self) -> (Vec3, Vec3, Vec3) {
         let forward = Vec3 {

@@ -1,4 +1,4 @@
-use crate::maths::{Color, Hit, Ray, Vec3};
+use crate::maths::{Aabb, Color, Hit, Ray, Vec3};
 
 #[derive(Debug)]
 pub struct Light {
@@ -18,6 +18,7 @@ pub trait Positioned: std::fmt::Debug {
 
 pub trait Hittable: std::fmt::Debug + Positioned {
     fn intersect(&self, ray: &Ray) -> Option<Hit>;
+    fn bounding_box(&self) -> Option<Aabb>;
 }
 
 #[derive(Debug)]
@@ -49,6 +50,9 @@ impl Hittable for Plane {
             normal: self.normal,
             material: self.material,
         })
+    }
+    fn bounding_box(&self) -> Option<Aabb> {
+        return None;
     }
 }
 
@@ -103,6 +107,20 @@ impl Hittable for Sphere {
             point,
             normal,
             material: self.material,
+        })
+    }
+    fn bounding_box(&self) -> Option<Aabb> {
+        Some(Aabb {
+            min: Vec3 {
+                x: self.center.x - self.radius,
+                y: self.center.y - self.radius,
+                z: self.center.z - self.radius,
+            },
+            max: Vec3 {
+                x: self.center.x + self.radius,
+                y: self.center.y + self.radius,
+                z: self.center.z + self.radius,
+            },
         })
     }
 }
