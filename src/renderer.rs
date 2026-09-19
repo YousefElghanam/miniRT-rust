@@ -1,3 +1,4 @@
+#[cfg(feature = "timing")]
 use std::time::Instant;
 
 use crate::camera::Camera;
@@ -80,12 +81,14 @@ impl Renderer {
 
     pub fn render(&mut self, scene: &Scene, camera: &Camera) {
         self.traversal_stats = TraversalStats::default();
+        #[cfg(feature = "timing")]
         let mut intersection_time = 0.0;
 
         for y in 0..self.height {
             for x in 0..self.width {
                 let index = ((y * self.width + x) * 4) as usize;
                 let ray = self.ray_for_pixel(x, y, camera);
+                #[cfg(feature = "timing")]
                 let start = Instant::now();
 
                 let color = match scene.intersect_with_stats(&ray, &mut self.traversal_stats) {
@@ -99,7 +102,10 @@ impl Renderer {
                     None => Color::default(),
                 };
 
-                intersection_time += start.elapsed().as_secs_f64() * 1000.0;
+                #[cfg(feature = "timing")]
+                {
+                    intersection_time += start.elapsed().as_secs_f64() * 1000.0;
+                }
                 self.frame_buffer[index] = color.r;
                 self.frame_buffer[index + 1] = color.g;
                 self.frame_buffer[index + 2] = color.b;
@@ -107,7 +113,14 @@ impl Renderer {
             }
         }
 
+        #[cfg(feature = "timing")]
         println!("Accumalted intersections time: {:.2}", intersection_time);
+        #[cfg(feature = "timing")]
+        let bvh_other_time_ns = self
+            .traversal_stats
+            .bvh_time_ns
+            .saturating_sub(self.traversal_stats.aabb_time_ns)
+            .saturating_sub(self.traversal_stats.bvh_primitive_time_ns);
         let total_candidates = self.traversal_stats.rays * scene.object_count();
         let aabb_percentage = percentage(
             self.traversal_stats.aabb_candidates_eliminated,
@@ -129,6 +142,23 @@ impl Renderer {
             self.traversal_stats.bvh_nodes_tested,
             self.traversal_stats.rays,
         );
+        #[cfg(feature = "timing")]
+        println!(
+            "AABB intersection time: {:.3} ms",
+            nanos_to_millis(self.traversal_stats.aabb_time_ns)
+        );
+        #[cfg(feature = "timing")]
+        println!(
+            "BVH recursion/other:     {:.3} ms",
+            nanos_to_millis(bvh_other_time_ns)
+        );
+        #[cfg(feature = "timing")]
+        println!(
+            "Primitive intersections: {:.3} ms",
+            nanos_to_millis(
+                self.traversal_stats.bvh_primitive_time_ns + self.traversal_stats.primitive_time_ns
+            )
+        );
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -136,6 +166,11 @@ impl Renderer {
         self.height = height;
         self.frame_buffer.resize((width * height * 4) as usize, 0);
     }
+}
+
+#[cfg(feature = "timing")]
+fn nanos_to_millis(nanoseconds: u128) -> f64 {
+    nanoseconds as f64 / 1_000_000.0
 }
 
 fn percentage(value: usize, total: usize) -> f32 {

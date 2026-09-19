@@ -137,22 +137,25 @@ impl App {
                 .copy_from_slice(&self.renderer.frame_buffer);
             frame.render().unwrap();
         }
+        self.record_presented_frame();
         println!(
             "Frametime: {:.2} ms",
             start.elapsed().as_secs_f64() * 1000.0
         );
         self.needs_render = false;
     }
+
+    fn record_presented_frame(&mut self) {
+        self.frame_count += 1;
+        if self.last_fps_update.elapsed().as_secs_f32() >= 1.0 {
+            println!("FPS: {}", self.frame_count);
+            self.frame_count = 0;
+            self.last_fps_update = Instant::now();
+        }
+    }
 }
 
 fn handle_redraw_request(app: &mut App) {
-    app.frame_count += 1;
-    if app.last_fps_update.elapsed().as_secs_f32() >= 1.0 {
-        println!("FPS: {}", app.frame_count);
-        app.frame_count = 0;
-        app.last_fps_update = Instant::now();
-    }
-
     let dt = app.last_frame.elapsed().as_secs_f32();
     app.last_frame = Instant::now();
     app.update(dt);

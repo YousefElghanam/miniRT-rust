@@ -1,3 +1,6 @@
+#[cfg(feature = "timing")]
+use std::time::Instant;
+
 use crate::elements::{Hittable, Material, Positioned};
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -8,6 +11,14 @@ pub struct TraversalStats {
     pub aabb_candidates_eliminated: usize,
     pub bvh_candidates_eliminated: usize,
     pub primitive_tests: usize,
+    #[cfg(feature = "timing")]
+    pub aabb_time_ns: u128,
+    #[cfg(feature = "timing")]
+    pub bvh_time_ns: u128,
+    #[cfg(feature = "timing")]
+    pub bvh_primitive_time_ns: u128,
+    #[cfg(feature = "timing")]
+    pub primitive_time_ns: u128,
 }
 
 pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
@@ -94,9 +105,18 @@ impl BvhNode {
         match self {
             BvhNode::Leaf { object, .. } => {
                 stats.primitive_tests += 1;
-                let hit = object.intersect(ray)?;
+                #[cfg(feature = "timing")]
+                let start = Instant::now();
+                let hit = object.intersect(ray);
+                #[cfg(feature = "timing")]
+                {
+                    stats.bvh_primitive_time_ns += start.elapsed().as_nanos();
+                }
 
-                if hit.t < max_t { Some(hit) } else { None }
+                match hit {
+                    Some(hit) if hit.t < max_t => Some(hit),
+                    _ => None,
+                }
             }
 
             BvhNode::Node { left, right, .. } => {
@@ -171,7 +191,14 @@ impl BvhNode {
 
     fn child_entry(&self, child: &BvhNode, ray: &Ray, stats: &mut TraversalStats) -> Option<f32> {
         stats.aabb_tests += 1;
-        match child.bounding_box().unwrap().hit_distance(ray) {
+        #[cfg(feature = "timing")]
+        let start = Instant::now();
+        let entry = child.bounding_box().unwrap().hit_distance(ray);
+        #[cfg(feature = "timing")]
+        {
+            stats.aabb_time_ns += start.elapsed().as_nanos();
+        }
+        match entry {
             Some(entry) => Some(entry),
             None => {
                 stats.aabb_candidates_eliminated += child.object_count();

@@ -2,7 +2,6 @@ Reading scene file... Success
 W:(1920) H:(1080)
 W:(1920) H:(1080)
 W:(384) H:(256)
-FPS: 73672
 W:(307) H:(204)
 W:(245) H:(163)
 W:(196) H:(130)
@@ -11,214 +10,116 @@ W:(124) H:(82)
 W:(99) H:(66)
 W:(79) H:(52)
 W:(63) H:(42)
-FPS: 89974
-FPS: 91740
 W:(75) H:(50)
 W:(90) H:(60)
-FPS: 90678
 W:(108) H:(72)
 W:(129) H:(86)
-Accumalted intersections time: 67.09
-Traversal: AABB eliminated 17857566 (94.5%), BVH eliminated 1012000 (5.4%), primitive tests 35754 / 18905320 candidates (AABB tests 1478170, BVH nodes 747759, rays 18830)
-Frametime: 71.64 ms
-FPS: 84923
-Accumalted intersections time: 65.36
-Traversal: AABB eliminated 17458758 (93.7%), BVH eliminated 1130506 (6.1%), primitive tests 36944 / 18626208 candidates (AABB tests 1453136, BVH nodes 736790, rays 18552)
-Frametime: 67.52 ms
-Accumalted intersections time: 63.66
-Traversal: AABB eliminated 17198755 (93.0%), BVH eliminated 1255975 (6.8%), primitive tests 37946 / 18492676 candidates (AABB tests 1424627, BVH nodes 723791, rays 18419)
-Frametime: 65.44 ms
-Accumalted intersections time: 63.58
-Traversal: AABB eliminated 16975757 (92.8%), BVH eliminated 1270789 (6.9%), primitive tests 38302 / 18284848 candidates (AABB tests 1400680, BVH nodes 712559, rays 18212)
-Frametime: 65.32 ms
-Accumalted intersections time: 62.60
-Traversal: AABB eliminated 16884727 (92.7%), BVH eliminated 1286031 (7.1%), primitive tests 38790 / 18209548 candidates (AABB tests 1394971, BVH nodes 710259, rays 18137)
-Frametime: 64.33 ms
-Accumalted intersections time: 63.56
-Traversal: AABB eliminated 16984568 (92.5%), BVH eliminated 1337849 (7.3%), primitive tests 38735 / 18361152 candidates (AABB tests 1413980, BVH nodes 719439, rays 18288)
-Frametime: 65.23 ms
-Accumalted intersections time: 63.40
-Traversal: AABB eliminated 17109737 (92.8%), BVH eliminated 1290637 (7.0%), primitive tests 38086 / 18438460 candidates (AABB tests 1425353, BVH nodes 724358, rays 18365)
-Frametime: 65.15 ms
-Accumalted intersections time: 62.68
-Traversal: AABB eliminated 17021883 (92.8%), BVH eliminated 1284470 (7.0%), primitive tests 38735 / 18345088 candidates (AABB tests 1412554, BVH nodes 718760, rays 18272)
-Frametime: 64.40 ms
-Accumalted intersections time: 62.71
-Traversal: AABB eliminated 16943082 (92.4%), BVH eliminated 1344708 (7.3%), primitive tests 39226 / 18327016 candidates (AABB tests 1405410, BVH nodes 715767, rays 18254)
-Frametime: 64.41 ms
-Accumalted intersections time: 63.79
-Traversal: AABB eliminated 16929085 (92.7%), BVH eliminated 1286166 (7.0%), primitive tests 37469 / 18252720 candidates (AABB tests 1418818, BVH nodes 720695, rays 18180)
-Frametime: 65.47 ms
-Accumalted intersections time: 64.47
-Traversal: AABB eliminated 17065737 (92.9%), BVH eliminated 1258829 (6.9%), primitive tests 37590 / 18362156 candidates (AABB tests 1425957, BVH nodes 724241, rays 18289)
-Frametime: 66.16 ms
-Accumalted intersections time: 62.83
-Traversal: AABB eliminated 16754770 (92.4%), BVH eliminated 1329392 (7.3%), primitive tests 39042 / 18123204 candidates (AABB tests 1381283, BVH nodes 703822, rays 18051)
-Frametime: 64.51 ms
-Accumalted intersections time: 61.73
-Traversal: AABB eliminated 16472960 (92.0%), BVH eliminated 1388084 (7.8%), primitive tests 39272 / 17900316 candidates (AABB tests 1357773, BVH nodes 692682, rays 17829)
+Traversal: AABB eliminated 17850448 (94.5%), BVH eliminated 1010139 (5.3%), primitive tests 35697 / 18896284 candidates (AABB tests 1477375, BVH nodes 747331, rays 18821)
+FPS: 1
+Frametime: 70.50 ms
+Traversal: AABB eliminated 17497948 (93.8%), BVH eliminated 1121946 (6.0%), primitive tests 36434 / 18656328 candidates (AABB tests 1460462, BVH nodes 739958, rays 18582)
+Frametime: 66.97 ms
+Traversal: AABB eliminated 17075835 (93.6%), BVH eliminated 1137758 (6.2%), primitive tests 36115 / 18249708 candidates (AABB tests 1439081, BVH nodes 729385, rays 18177)
+Frametime: 66.54 ms
+Traversal: AABB eliminated 17027183 (93.7%), BVH eliminated 1106415 (6.1%), primitive tests 35790 / 18169388 candidates (AABB tests 1438161, BVH nodes 728712, rays 18097)
+Frametime: 65.68 ms
+Traversal: AABB eliminated 17294193 (93.9%), BVH eliminated 1097236 (6.0%), primitive tests 35987 / 18427416 candidates (AABB tests 1458500, BVH nodes 738815, rays 18354)
+Frametime: 66.77 ms
+Traversal: AABB eliminated 17132043 (93.5%), BVH eliminated 1146564 (6.3%), primitive tests 36361 / 18314968 candidates (AABB tests 1439374, BVH nodes 729680, rays 18242)
+Frametime: 65.38 ms
+Traversal: AABB eliminated 16688601 (93.3%), BVH eliminated 1160954 (6.5%), primitive tests 35701 / 17885256 candidates (AABB tests 1410260, BVH nodes 715127, rays 17814)
 Frametime: 63.54 ms
-Accumalted intersections time: 62.83
-Traversal: AABB eliminated 16621064 (92.1%), BVH eliminated 1394100 (7.7%), primitive tests 38764 / 18053928 candidates (AABB tests 1386814, BVH nodes 706375, rays 17982)
-Frametime: 64.59 ms
-Accumalted intersections time: 64.27
-Traversal: AABB eliminated 16893294 (92.7%), BVH eliminated 1295652 (7.1%), primitive tests 37670 / 18226616 candidates (AABB tests 1413522, BVH nodes 718283, rays 18154)
-Frametime: 66.01 ms
-Accumalted intersections time: 63.31
-Traversal: AABB eliminated 16610166 (92.2%), BVH eliminated 1367462 (7.6%), primitive tests 39152 / 18016780 candidates (AABB tests 1369555, BVH nodes 698240, rays 17945)
-Frametime: 65.06 ms
-Accumalted intersections time: 62.00
-Traversal: AABB eliminated 16264065 (91.8%), BVH eliminated 1419039 (8.0%), primitive tests 39504 / 17722608 candidates (AABB tests 1341614, BVH nodes 685198, rays 17652)
-Frametime: 63.75 ms
-FPS: 427
-Accumalted intersections time: 62.96
-Traversal: AABB eliminated 16302669 (91.5%), BVH eliminated 1478395 (8.3%), primitive tests 39936 / 17821000 candidates (AABB tests 1364420, BVH nodes 696840, rays 17750)
-Frametime: 64.69 ms
-Accumalted intersections time: 61.74
-Traversal: AABB eliminated 16712210 (92.2%), BVH eliminated 1378145 (7.6%), primitive tests 38873 / 18129228 candidates (AABB tests 1388037, BVH nodes 706955, rays 18057)
-Frametime: 63.41 ms
-Accumalted intersections time: 60.15
-Traversal: AABB eliminated 16375749 (92.6%), BVH eliminated 1267626 (7.2%), primitive tests 38069 / 17681444 candidates (AABB tests 1336347, BVH nodes 681159, rays 17611)
-Frametime: 61.83 ms
-Accumalted intersections time: 57.95
-Traversal: AABB eliminated 16004178 (92.4%), BVH eliminated 1271905 (7.3%), primitive tests 37897 / 17313980 candidates (AABB tests 1297785, BVH nodes 662382, rays 17245)
-Frametime: 59.59 ms
-Accumalted intersections time: 61.57
-Traversal: AABB eliminated 16314523 (91.4%), BVH eliminated 1490298 (8.4%), primitive tests 40275 / 17845096 candidates (AABB tests 1359328, BVH nodes 694638, rays 17774)
-Frametime: 63.26 ms
-Accumalted intersections time: 62.34
-Traversal: AABB eliminated 16621749 (92.3%), BVH eliminated 1354709 (7.5%), primitive tests 38314 / 18014772 candidates (AABB tests 1387571, BVH nodes 706313, rays 17943)
-Frametime: 64.04 ms
-Accumalted intersections time: 61.77
-Traversal: AABB eliminated 16584359 (92.6%), BVH eliminated 1294556 (7.2%), primitive tests 38469 / 17917384 candidates (AABB tests 1357178, BVH nodes 691574, rays 17846)
-Frametime: 63.48 ms
-Accumalted intersections time: 58.76
-Traversal: AABB eliminated 15946911 (92.6%), BVH eliminated 1235185 (7.2%), primitive tests 37508 / 17219604 candidates (AABB tests 1288113, BVH nodes 657361, rays 17151)
-Frametime: 60.46 ms
-Accumalted intersections time: 59.81
-Traversal: AABB eliminated 15987532 (91.7%), BVH eliminated 1411959 (8.1%), primitive tests 38985 / 17438476 candidates (AABB tests 1310989, BVH nodes 669933, rays 17369)
-Frametime: 61.49 ms
-Accumalted intersections time: 62.21
-Traversal: AABB eliminated 16449025 (91.7%), BVH eliminated 1444736 (8.1%), primitive tests 39687 / 17933448 candidates (AABB tests 1363242, BVH nodes 695764, rays 17862)
-Frametime: 63.92 ms
-Accumalted intersections time: 62.06
-Traversal: AABB eliminated 16613975 (92.6%), BVH eliminated 1293916 (7.2%), primitive tests 38609 / 17946500 candidates (AABB tests 1361271, BVH nodes 693661, rays 17875)
-Frametime: 63.71 ms
-Accumalted intersections time: 59.30
-Traversal: AABB eliminated 16078885 (92.7%), BVH eliminated 1236714 (7.1%), primitive tests 37537 / 17353136 candidates (AABB tests 1301550, BVH nodes 663789, rays 17284)
-Frametime: 60.99 ms
-Accumalted intersections time: 58.21
-Traversal: AABB eliminated 15912362 (92.5%), BVH eliminated 1256683 (7.3%), primitive tests 37507 / 17206552 candidates (AABB tests 1284940, BVH nodes 655820, rays 17138)
-Frametime: 59.91 ms
-Accumalted intersections time: 60.69
-Traversal: AABB eliminated 16341385 (91.7%), BVH eliminated 1439866 (8.1%), primitive tests 39749 / 17821000 candidates (AABB tests 1352468, BVH nodes 690673, rays 17750)
-Frametime: 62.36 ms
-Accumalted intersections time: 63.61
-Traversal: AABB eliminated 16848591 (92.3%), BVH eliminated 1359099 (7.4%), primitive tests 39006 / 18246696 candidates (AABB tests 1397208, BVH nodes 711489, rays 18174)
-Frametime: 65.30 ms
-Accumalted intersections time: 62.44
-Traversal: AABB eliminated 16759335 (92.8%), BVH eliminated 1252224 (6.9%), primitive tests 38353 / 18049912 candidates (AABB tests 1370096, BVH nodes 697725, rays 17978)
-Frametime: 64.13 ms
-FPS: 500
-Accumalted intersections time: 58.86
-Traversal: AABB eliminated 16007730 (92.7%), BVH eliminated 1225506 (7.1%), primitive tests 37572 / 17270808 candidates (AABB tests 1293986, BVH nodes 660209, rays 17202)
-Frametime: 60.52 ms
-Accumalted intersections time: 60.07
-Traversal: AABB eliminated 16145593 (92.4%), BVH eliminated 1286589 (7.4%), primitive tests 38422 / 17470604 candidates (AABB tests 1316335, BVH nodes 671868, rays 17401)
-Frametime: 61.77 ms
-Accumalted intersections time: 61.82
-Traversal: AABB eliminated 16669904 (92.0%), BVH eliminated 1407093 (7.8%), primitive tests 39179 / 18116176 candidates (AABB tests 1381468, BVH nodes 704008, rays 18044)
-Frametime: 63.47 ms
-Accumalted intersections time: 62.74
-Traversal: AABB eliminated 16834163 (92.8%), BVH eliminated 1273575 (7.0%), primitive tests 38558 / 18146296 candidates (AABB tests 1384802, BVH nodes 705062, rays 18074)
-Frametime: 64.41 ms
-Accumalted intersections time: 59.91
-Traversal: AABB eliminated 16225897 (92.7%), BVH eliminated 1239263 (7.1%), primitive tests 37572 / 17502732 candidates (AABB tests 1316111, BVH nodes 670850, rays 17433)
-Frametime: 61.59 ms
-Accumalted intersections time: 59.74
-Traversal: AABB eliminated 16121022 (92.4%), BVH eliminated 1295247 (7.4%), primitive tests 38271 / 17454540 candidates (AABB tests 1312673, BVH nodes 669924, rays 17385)
-Frametime: 61.39 ms
-Accumalted intersections time: 61.37
-Traversal: AABB eliminated 16454103 (91.8%), BVH eliminated 1437718 (8.0%), primitive tests 39619 / 17931440 candidates (AABB tests 1361108, BVH nodes 694654, rays 17860)
-Frametime: 63.06 ms
-Accumalted intersections time: 63.64
-Traversal: AABB eliminated 16756095 (92.3%), BVH eliminated 1352110 (7.5%), primitive tests 39095 / 18147300 candidates (AABB tests 1382349, BVH nodes 704384, rays 18075)
-Frametime: 65.35 ms
-Accumalted intersections time: 59.86
-Traversal: AABB eliminated 16025893 (92.7%), BVH eliminated 1224458 (7.1%), primitive tests 37525 / 17287876 candidates (AABB tests 1297487, BVH nodes 661868, rays 17219)
-Frametime: 61.57 ms
-Accumalted intersections time: 59.33
-Traversal: AABB eliminated 15909741 (92.4%), BVH eliminated 1268168 (7.4%), primitive tests 37679 / 17215588 candidates (AABB tests 1285107, BVH nodes 656117, rays 17147)
-Frametime: 61.01 ms
-Accumalted intersections time: 62.35
-Traversal: AABB eliminated 16267399 (91.6%), BVH eliminated 1451469 (8.2%), primitive tests 39884 / 17758752 candidates (AABB tests 1347698, BVH nodes 688545, rays 17688)
-Frametime: 64.09 ms
-Accumalted intersections time: 64.58
-Traversal: AABB eliminated 16856681 (92.2%), BVH eliminated 1394886 (7.6%), primitive tests 39305 / 18290872 candidates (AABB tests 1396150, BVH nodes 711265, rays 18218)
-Frametime: 66.30 ms
-Accumalted intersections time: 61.21
-Traversal: AABB eliminated 16240408 (92.7%), BVH eliminated 1246582 (7.1%), primitive tests 37830 / 17524820 candidates (AABB tests 1323093, BVH nodes 674526, rays 17455)
-Frametime: 62.89 ms
-Accumalted intersections time: 58.83
-Traversal: AABB eliminated 16008440 (92.0%), BVH eliminated 1352327 (7.8%), primitive tests 38553 / 17399320 candidates (AABB tests 1302222, BVH nodes 665249, rays 17330)
-Frametime: 60.50 ms
-Accumalted intersections time: 60.93
-Traversal: AABB eliminated 16395282 (91.8%), BVH eliminated 1426294 (8.0%), primitive tests 39584 / 17861160 candidates (AABB tests 1354836, BVH nodes 691597, rays 17790)
-Frametime: 62.59 ms
-Accumalted intersections time: 63.45
-Traversal: AABB eliminated 16856507 (92.4%), BVH eliminated 1341079 (7.4%), primitive tests 39070 / 18236656 candidates (AABB tests 1395382, BVH nodes 710705, rays 18164)
-Frametime: 65.12 ms
-FPS: 207
-Accumalted intersections time: 59.78
-Traversal: AABB eliminated 16144608 (92.6%), BVH eliminated 1243141 (7.1%), primitive tests 37675 / 17425424 candidates (AABB tests 1312140, BVH nodes 669100, rays 17356)
-Frametime: 61.48 ms
-Accumalted intersections time: 60.15
-Traversal: AABB eliminated 16128732 (92.2%), BVH eliminated 1321270 (7.6%), primitive tests 38674 / 17488676 candidates (AABB tests 1316639, BVH nodes 672271, rays 17419)
-Frametime: 61.82 ms
-Accumalted intersections time: 62.77
-Traversal: AABB eliminated 16706117 (92.1%), BVH eliminated 1399077 (7.7%), primitive tests 39094 / 18144288 candidates (AABB tests 1386920, BVH nodes 706606, rays 18072)
-Frametime: 64.44 ms
-Accumalted intersections time: 62.61
-Traversal: AABB eliminated 16776899 (92.7%), BVH eliminated 1286446 (7.1%), primitive tests 38775 / 18102120 candidates (AABB tests 1379624, BVH nodes 702736, rays 18030)
-Frametime: 64.27 ms
-Accumalted intersections time: 59.00
-Traversal: AABB eliminated 15982719 (92.6%), BVH eliminated 1232439 (7.1%), primitive tests 37578 / 17252736 candidates (AABB tests 1293508, BVH nodes 660020, rays 17184)
-Frametime: 60.67 ms
-Accumalted intersections time: 61.03
-Traversal: AABB eliminated 16194660 (91.8%), BVH eliminated 1408109 (8.0%), primitive tests 39519 / 17642288 candidates (AABB tests 1337174, BVH nodes 683108, rays 17572)
-Frametime: 62.71 ms
-Accumalted intersections time: 63.79
-Traversal: AABB eliminated 16835715 (92.4%), BVH eliminated 1352471 (7.4%), primitive tests 38430 / 18226616 candidates (AABB tests 1404904, BVH nodes 714779, rays 18154)
-Frametime: 65.48 ms
-Accumalted intersections time: 60.33
-Traversal: AABB eliminated 16450532 (92.7%), BVH eliminated 1265258 (7.1%), primitive tests 37942 / 17753732 candidates (AABB tests 1340615, BVH nodes 683021, rays 17683)
-Frametime: 62.01 ms
-Accumalted intersections time: 58.13
-Traversal: AABB eliminated 15872845 (92.5%), BVH eliminated 1245196 (7.3%), primitive tests 37307 / 17155348 candidates (AABB tests 1279947, BVH nodes 653208, rays 17087)
-Frametime: 59.78 ms
-Accumalted intersections time: 62.31
-Traversal: AABB eliminated 16536427 (92.0%), BVH eliminated 1396903 (7.8%), primitive tests 39274 / 17972604 candidates (AABB tests 1364369, BVH nodes 695841, rays 17901)
-Frametime: 63.98 ms
-Accumalted intersections time: 64.00
-Traversal: AABB eliminated 16916253 (92.6%), BVH eliminated 1305452 (7.1%), primitive tests 39047 / 18260752 candidates (AABB tests 1400476, BVH nodes 713224, rays 18188)
-Frametime: 65.69 ms
-Accumalted intersections time: 60.59
-Traversal: AABB eliminated 16278684 (92.7%), BVH eliminated 1244504 (7.1%), primitive tests 37776 / 17560964 candidates (AABB tests 1325693, BVH nodes 675750, rays 17491)
-Frametime: 62.29 ms
-Accumalted intersections time: 60.62
-Traversal: AABB eliminated 16182388 (92.1%), BVH eliminated 1340749 (7.6%), primitive tests 38831 / 17561968 candidates (AABB tests 1323050, BVH nodes 675520, rays 17492)
-Frametime: 62.29 ms
-Accumalted intersections time: 62.95
-Traversal: AABB eliminated 16627998 (92.1%), BVH eliminated 1381868 (7.7%), primitive tests 39042 / 18048908 candidates (AABB tests 1381203, BVH nodes 703846, rays 17977)
-Frametime: 64.62 ms
-Accumalted intersections time: 63.93
-Traversal: AABB eliminated 16759697 (92.4%), BVH eliminated 1335508 (7.4%), primitive tests 39043 / 18134248 candidates (AABB tests 1382462, BVH nodes 704382, rays 18062)
-Frametime: 65.60 ms
-Accumalted intersections time: 60.80
-Traversal: AABB eliminated 16134762 (92.6%), BVH eliminated 1253695 (7.2%), primitive tests 37971 / 17426428 candidates (AABB tests 1312555, BVH nodes 669589, rays 17357)
-Frametime: 62.54 ms
-FPS: 196
-Accumalted intersections time: 62.12
-Traversal: AABB eliminated 16390434 (92.3%), BVH eliminated 1323481 (7.5%), primitive tests 38813 / 17752728 candidates (AABB tests 1345578, BVH nodes 686367, rays 17682)
-Frametime: 63.87 ms
+Traversal: AABB eliminated 16936098 (93.7%), BVH eliminated 1100282 (6.1%), primitive tests 35620 / 18072000 candidates (AABB tests 1431818, BVH nodes 725492, rays 18000)
+Frametime: 64.25 ms
+Traversal: AABB eliminated 17053297 (93.7%), BVH eliminated 1115261 (6.1%), primitive tests 35970 / 18204528 candidates (AABB tests 1438664, BVH nodes 729085, rays 18132)
+Frametime: 64.61 ms
+Traversal: AABB eliminated 16438182 (92.8%), BVH eliminated 1244234 (7.0%), primitive tests 36176 / 17718592 candidates (AABB tests 1387044, BVH nodes 704314, rays 17648)
+Frametime: 62.68 ms
+Traversal: AABB eliminated 16475028 (93.4%), BVH eliminated 1131265 (6.4%), primitive tests 34991 / 17641284 candidates (AABB tests 1395307, BVH nodes 707320, rays 17571)
+Frametime: 62.85 ms
+Traversal: AABB eliminated 16922328 (93.8%), BVH eliminated 1087052 (6.0%), primitive tests 35512 / 18044892 candidates (AABB tests 1432539, BVH nodes 725774, rays 17973)
+Frametime: 64.32 ms
+Traversal: AABB eliminated 16636301 (92.7%), BVH eliminated 1275365 (7.1%), primitive tests 36842 / 17948508 candidates (AABB tests 1399695, BVH nodes 710954, rays 17877)
+Frametime: 64.01 ms
+Traversal: AABB eliminated 16255556 (92.2%), BVH eliminated 1328049 (7.5%), primitive tests 37599 / 17621204 candidates (AABB tests 1369923, BVH nodes 697411, rays 17551)
+Frametime: 63.05 ms
+Traversal: AABB eliminated 16568822 (93.4%), BVH eliminated 1135730 (6.4%), primitive tests 35124 / 17739676 candidates (AABB tests 1403375, BVH nodes 711315, rays 17669)
+Frametime: 64.49 ms
+Traversal: AABB eliminated 16874716 (93.3%), BVH eliminated 1172980 (6.5%), primitive tests 36352 / 18084048 candidates (AABB tests 1423010, BVH nodes 721842, rays 18012)
+Frametime: 65.55 ms
+Traversal: AABB eliminated 16686745 (92.0%), BVH eliminated 1402070 (7.7%), primitive tests 39409 / 18128224 candidates (AABB tests 1381348, BVH nodes 704213, rays 18056)
+FPS: 16
+Frametime: 63.89 ms
+Traversal: AABB eliminated 16432953 (91.7%), BVH eliminated 1453023 (8.1%), primitive tests 39440 / 17925416 candidates (AABB tests 1370162, BVH nodes 698965, rays 17854)
+Frametime: 63.01 ms
+Traversal: AABB eliminated 16431112 (92.9%), BVH eliminated 1224594 (6.9%), primitive tests 35778 / 17691484 candidates (AABB tests 1387755, BVH nodes 704309, rays 17621)
+Frametime: 62.83 ms
+Traversal: AABB eliminated 16952584 (93.3%), BVH eliminated 1173171 (6.5%), primitive tests 36605 / 18162360 candidates (AABB tests 1424018, BVH nodes 722477, rays 18090)
+Frametime: 65.28 ms
+Traversal: AABB eliminated 16847455 (92.2%), BVH eliminated 1386087 (7.6%), primitive tests 39258 / 18272800 candidates (AABB tests 1397474, BVH nodes 711898, rays 18200)
+Frametime: 64.53 ms
+Traversal: AABB eliminated 16413781 (91.5%), BVH eliminated 1480830 (8.3%), primitive tests 39841 / 17934452 candidates (AABB tests 1365767, BVH nodes 697194, rays 17863)
+Frametime: 62.77 ms
+Traversal: AABB eliminated 16376691 (92.5%), BVH eliminated 1286982 (7.3%), primitive tests 36847 / 17700520 candidates (AABB tests 1381258, BVH nodes 702206, rays 17630)
+Frametime: 62.48 ms
+Traversal: AABB eliminated 16895712 (93.3%), BVH eliminated 1185957 (6.5%), primitive tests 36515 / 18118184 candidates (AABB tests 1423012, BVH nodes 721979, rays 18046)
+Frametime: 65.10 ms
+Traversal: AABB eliminated 16920424 (92.5%), BVH eliminated 1340731 (7.3%), primitive tests 38753 / 18299908 candidates (AABB tests 1404801, BVH nodes 714959, rays 18227)
+Frametime: 64.57 ms
+Traversal: AABB eliminated 16589897 (92.0%), BVH eliminated 1410667 (7.8%), primitive tests 39308 / 18039872 candidates (AABB tests 1374396, BVH nodes 700734, rays 17968)
+Frametime: 63.46 ms
+Traversal: AABB eliminated 16533095 (92.5%), BVH eliminated 1298026 (7.3%), primitive tests 37067 / 17868188 candidates (AABB tests 1390257, BVH nodes 706628, rays 17797)
+Frametime: 64.29 ms
+Traversal: AABB eliminated 17061788 (93.2%), BVH eliminated 1206046 (6.6%), primitive tests 37094 / 18304928 candidates (AABB tests 1432084, BVH nodes 726829, rays 18232)
+Frametime: 64.07 ms
+Traversal: AABB eliminated 17010715 (92.6%), BVH eliminated 1315571 (7.2%), primitive tests 38882 / 18365168 candidates (AABB tests 1414084, BVH nodes 719640, rays 18292)
+Frametime: 63.27 ms
+Traversal: AABB eliminated 16308937 (91.4%), BVH eliminated 1493942 (8.4%), primitive tests 40209 / 17843088 candidates (AABB tests 1358474, BVH nodes 694116, rays 17772)
+Frametime: 62.50 ms
+Traversal: AABB eliminated 16169331 (92.3%), BVH eliminated 1302788 (7.4%), primitive tests 37641 / 17509760 candidates (AABB tests 1364364, BVH nodes 694887, rays 17440)
+Frametime: 62.79 ms
+Traversal: AABB eliminated 16727097 (93.0%), BVH eliminated 1221981 (6.8%), primitive tests 36578 / 17985656 candidates (AABB tests 1407816, BVH nodes 714657, rays 17914)
+Frametime: 64.57 ms
+Traversal: AABB eliminated 16607247 (92.2%), BVH eliminated 1373363 (7.6%), primitive tests 39182 / 18019792 candidates (AABB tests 1369838, BVH nodes 698404, rays 17948)
+FPS: 16
+Frametime: 63.18 ms
+Traversal: AABB eliminated 15936134 (91.1%), BVH eliminated 1507635 (8.6%), primitive tests 39887 / 17483656 candidates (AABB tests 1323198, BVH nodes 676850, rays 17414)
+Frametime: 60.33 ms
+Traversal: AABB eliminated 15973217 (91.6%), BVH eliminated 1426990 (8.2%), primitive tests 39273 / 17439480 candidates (AABB tests 1343838, BVH nodes 686562, rays 17370)
+Frametime: 61.71 ms
+Traversal: AABB eliminated 16648548 (92.5%), BVH eliminated 1309998 (7.3%), primitive tests 37150 / 17995696 candidates (AABB tests 1399878, BVH nodes 711334, rays 17924)
+Frametime: 64.36 ms
+Traversal: AABB eliminated 16818351 (92.2%), BVH eliminated 1393177 (7.6%), primitive tests 39184 / 18250712 candidates (AABB tests 1395348, BVH nodes 710780, rays 18178)
+Frametime: 64.39 ms
+Traversal: AABB eliminated 15834909 (91.1%), BVH eliminated 1502783 (8.6%), primitive tests 39540 / 17377232 candidates (AABB tests 1312138, BVH nodes 671148, rays 17308)
+Frametime: 59.71 ms
+Traversal: AABB eliminated 16037555 (91.4%), BVH eliminated 1463568 (8.3%), primitive tests 39761 / 17540884 candidates (AABB tests 1347079, BVH nodes 688563, rays 17471)
+Frametime: 62.33 ms
+Traversal: AABB eliminated 16862387 (92.8%), BVH eliminated 1268913 (7.0%), primitive tests 37084 / 18168384 candidates (AABB tests 1416158, BVH nodes 719113, rays 18096)
+Frametime: 65.44 ms
+Traversal: AABB eliminated 16756632 (92.5%), BVH eliminated 1318525 (7.3%), primitive tests 39011 / 18114168 candidates (AABB tests 1381652, BVH nodes 703988, rays 18042)
+Frametime: 64.00 ms
+Traversal: AABB eliminated 15785767 (91.3%), BVH eliminated 1461138 (8.5%), primitive tests 38963 / 17285868 candidates (AABB tests 1298761, BVH nodes 664081, rays 17217)
+Frametime: 60.35 ms
+Traversal: AABB eliminated 15997336 (92.0%), BVH eliminated 1350409 (7.8%), primitive tests 38523 / 17386268 candidates (AABB tests 1348923, BVH nodes 688339, rays 17317)
+Frametime: 62.26 ms
+Traversal: AABB eliminated 16806247 (93.4%), BVH eliminated 1156277 (6.4%), primitive tests 36184 / 17998708 candidates (AABB tests 1413863, BVH nodes 717199, rays 17927)
+Frametime: 64.65 ms
+Traversal: AABB eliminated 16793698 (92.3%), BVH eliminated 1367942 (7.5%), primitive tests 38872 / 18200512 candidates (AABB tests 1396706, BVH nodes 711167, rays 18128)
+Frametime: 64.73 ms
+Traversal: AABB eliminated 16175333 (91.3%), BVH eliminated 1502779 (8.5%), primitive tests 40480 / 17718592 candidates (AABB tests 1351526, BVH nodes 691209, rays 17648)
+Frametime: 61.34 ms
+Traversal: AABB eliminated 16491201 (92.5%), BVH eliminated 1308937 (7.3%), primitive tests 36926 / 17837064 candidates (AABB tests 1389022, BVH nodes 705914, rays 17766)
+Frametime: 63.88 ms
+Traversal: AABB eliminated 17322093 (93.4%), BVH eliminated 1187715 (6.4%), primitive tests 37084 / 18546892 candidates (AABB tests 1447435, BVH nodes 734130, rays 18473)
+Frametime: 66.87 ms
+Traversal: AABB eliminated 16626321 (92.1%), BVH eliminated 1382298 (7.7%), primitive tests 39285 / 18047904 candidates (AABB tests 1372744, BVH nodes 699880, rays 17976)
+FPS: 16
+Frametime: 63.78 ms
+Traversal: AABB eliminated 16250397 (91.4%), BVH eliminated 1479298 (8.3%), primitive tests 40101 / 17769796 candidates (AABB tests 1350715, BVH nodes 690251, rays 17699)
+Frametime: 63.16 ms
+Traversal: AABB eliminated 16647283 (92.2%), BVH eliminated 1360586 (7.5%), primitive tests 38027 / 18045896 candidates (AABB tests 1395588, BVH nodes 710010, rays 17974)
+Frametime: 65.21 ms
+Traversal: AABB eliminated 16771758 (92.4%), BVH eliminated 1348600 (7.4%), primitive tests 37986 / 18158344 candidates (AABB tests 1403786, BVH nodes 713872, rays 18086)
+Frametime: 65.32 ms
 exiting
