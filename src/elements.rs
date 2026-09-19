@@ -1,6 +1,30 @@
 use crate::maths::{Aabb, Color, Hit, Ray, Vec3};
 
 #[derive(Debug)]
+pub enum ObjType {
+    LIGHT,
+    SPHERE,
+    PLANE,
+    CYLINDER,
+    CONE,
+}
+
+#[derive(Debug)]
+pub struct Point {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+#[derive(Debug)]
+pub struct Object {
+    pub obj_type: ObjType,
+    pub scale: u8,
+    pub position: Point,
+    pub direction: Vec3,
+}
+
+#[derive(Debug)]
 pub struct Light {
     pub position: Vec3,
     // pub intensity: f32,

@@ -1,5 +1,6 @@
 use std::env;
 
+mod app;
 mod camera;
 mod constants;
 mod elements;
@@ -8,6 +9,7 @@ mod input;
 mod maths;
 mod parse;
 mod render;
+mod renderer;
 mod scene;
 
 use crate::error::MiniRtErr;
@@ -33,25 +35,16 @@ fn log_scene_content(scene: &Scene) {
 
 fn main() -> Result<(), MiniRtErr> {
     let args: Vec<String> = env::args().collect();
-    let mut scene: Scene = Scene::default();
-    if args.len() > 2 || args.len() < 1 {
-        drop(MiniRtErr::InvalidNumberOfArguments);
-    // } else if args.len() == 1 {
-    //     println!("Generating default scene");
-    //     scene = generate_default_scene();
-    } else {
-        print!("Reading scene file... ");
-        match parse_scene_file() {
-            Ok(res) => {
-                println!("Success");
-                scene = res;
-            }
-            Err(err) => {
-                println!("Failed");
-                return Err(err);
-            }
+    let scene = match args.as_slice() {
+        [_] => Scene::default(),
+        [_, path] => {
+            print!("Reading scene file... ");
+            let scene = parse_scene_file(path)?;
+            println!("Success");
+            scene
         }
-    }
+        _ => return Err(MiniRtErr::InvalidNumberOfArguments),
+    };
     log_scene_content(&scene);
     render::render(scene);
     Ok(())

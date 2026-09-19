@@ -11,7 +11,3 @@ impl From<std::io::Error> for MiniRtErr {
         MiniRtErr::Io(error)
     }
 }
-
-pub enum SceneObjectsIdentifiers {
-    S,
-}

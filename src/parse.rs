@@ -1,13 +1,12 @@
-use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use crate::constants::SCENE_FILE_EXTENSION;
-use crate::elements::{Light, Material, Plane, Sphere};
+use crate::elements::{Light, Material, ObjType, Object, Plane, Point, Sphere};
 use crate::error::MiniRtErr;
 use crate::maths::build_bvh;
 use crate::maths::{Color, Vec3};
-use crate::scene::{ObjType, Object, Point, Scene};
+use crate::scene::Scene;
 
 pub fn generate_default_scene() -> Scene {
     unimplemented!("generating a default scene"); // TODO
@@ -160,8 +159,11 @@ pub fn parse_light_line(words: &Vec<&str>) -> Light {
     }
 }
 
-pub fn parse_line(line: String, scene: &mut Scene) {
+pub fn parse_line(line: &str, scene: &mut Scene) {
     let words: Vec<&str> = line.split_whitespace().collect();
+    if words.is_empty() {
+        return;
+    }
     if words[0] == "LIGHT" {
         let light = parse_light_line(&words);
         scene.lights.push(light);
@@ -184,24 +186,23 @@ pub fn parse_line(line: String, scene: &mut Scene) {
     // }
 }
 
-pub fn parse_scene_file() -> Result<Scene, MiniRtErr> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() == 2 && !&args[1].ends_with(SCENE_FILE_EXTENSION) {
+pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
+    if !path.ends_with(SCENE_FILE_EXTENSION) {
         return Err(MiniRtErr::InvalidSceneFileExtension);
     }
     let mut scene: Scene = Scene::default();
-    match File::open(&args[1]) {
+    match File::open(path) {
         Ok(file) => {
             let reader = BufReader::new(file);
             for line in reader.lines() {
-                let mut line = line.unwrap_or_else(|_| "".to_string()).trim().to_string();
+                let mut line = line?.trim().to_string();
                 if let Some(pos) = line.find('#') {
                     line.truncate(pos);
                 }
                 if line.len() == 0 {
                     continue;
                 }
-                parse_line(line, &mut scene);
+                parse_line(&line, &mut scene);
             }
             let mut bounded_objects = Vec::new();
             let mut unbounded_objects = Vec::new();

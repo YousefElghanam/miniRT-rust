@@ -4,7 +4,7 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::render::App;
+use crate::app::App;
 
 pub struct Input {
     pub arrow_up: bool,
