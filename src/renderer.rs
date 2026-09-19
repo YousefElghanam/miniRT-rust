@@ -3,10 +3,15 @@ use std::time::Instant;
 use crate::camera::Camera;
 use crate::constants::AMBIENT;
 use crate::elements::Light;
-use crate::maths::{Color, Hit, Ray, Vec3};
+use crate::maths::{Color, Hit, Ray, TraversalStats, Vec3};
 use crate::scene::Scene;
 
-pub fn calculate_lighting(hit: &Hit, light: &Light, scene: &Scene) -> f32 {
+pub fn calculate_lighting(
+    hit: &Hit,
+    light: &Light,
+    scene: &Scene,
+    stats: &mut TraversalStats,
+) -> f32 {
     let to_light = light.position.sub(hit.point);
     let light_distance = to_light.length();
     let light_direction = to_light.normalize();
@@ -21,7 +26,7 @@ pub fn calculate_lighting(hit: &Hit, light: &Light, scene: &Scene) -> f32 {
         },
     };
 
-    if let Some(shadow_hit) = scene.intersect(&shadow_ray) {
+    if let Some(shadow_hit) = scene.intersect_with_stats(&shadow_ray, stats) {
         if shadow_hit.t < light_distance {
             return 0.0;
         }
@@ -35,6 +40,7 @@ pub struct Renderer {
     pub width: u32,
     pub height: u32,
     pub frame_buffer: Vec<u8>,
+    pub traversal_stats: TraversalStats,
 }
 
 impl Renderer {
@@ -43,6 +49,7 @@ impl Renderer {
             width,
             height,
             frame_buffer: vec![0; (width * height * 4) as usize],
+            traversal_stats: TraversalStats::default(),
         }
     }
 
@@ -72,6 +79,7 @@ impl Renderer {
     }
 
     pub fn render(&mut self, scene: &Scene, camera: &Camera) {
+        self.traversal_stats = TraversalStats::default();
         let mut intersection_time = 0.0;
 
         for y in 0..self.height {
@@ -80,12 +88,11 @@ impl Renderer {
                 let ray = self.ray_for_pixel(x, y, camera);
                 let start = Instant::now();
 
-                let color = match scene.intersect(&ray) {
+                let color = match scene.intersect_with_stats(&ray, &mut self.traversal_stats) {
                     Some(hit) => {
-                        let diffuse = scene
-                            .lights
-                            .first()
-                            .map_or(0.0, |light| calculate_lighting(&hit, light, scene));
+                        let diffuse = scene.lights.first().map_or(0.0, |light| {
+                            calculate_lighting(&hit, light, scene, &mut self.traversal_stats)
+                        });
                         let brightness = (AMBIENT + diffuse).min(1.0);
                         Color::from_brightness(brightness, &hit.material)
                     }
@@ -101,11 +108,40 @@ impl Renderer {
         }
 
         println!("Accumalted intersections time: {:.2}", intersection_time);
+        let total_candidates = self.traversal_stats.rays * scene.object_count();
+        let aabb_percentage = percentage(
+            self.traversal_stats.aabb_candidates_eliminated,
+            total_candidates,
+        );
+        let bvh_percentage = percentage(
+            self.traversal_stats.bvh_candidates_eliminated,
+            total_candidates,
+        );
+        println!(
+            "Traversal: AABB eliminated {} ({:.1}%), BVH eliminated {} ({:.1}%), primitive tests {} / {} candidates (AABB tests {}, BVH nodes {}, rays {})",
+            self.traversal_stats.aabb_candidates_eliminated,
+            aabb_percentage,
+            self.traversal_stats.bvh_candidates_eliminated,
+            bvh_percentage,
+            self.traversal_stats.primitive_tests,
+            total_candidates,
+            self.traversal_stats.aabb_tests,
+            self.traversal_stats.bvh_nodes_tested,
+            self.traversal_stats.rays,
+        );
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
         self.width = width;
         self.height = height;
         self.frame_buffer.resize((width * height * 4) as usize, 0);
+    }
+}
+
+fn percentage(value: usize, total: usize) -> f32 {
+    if total == 0 {
+        0.0
+    } else {
+        value as f32 * 100.0 / total as f32
     }
 }

@@ -1,11 +1,25 @@
 use crate::elements::{Hittable, Material, Positioned};
 
+#[derive(Debug, Default, Clone, Copy)]
+pub struct TraversalStats {
+    pub rays: usize,
+    pub bvh_nodes_tested: usize,
+    pub aabb_tests: usize,
+    pub aabb_candidates_eliminated: usize,
+    pub bvh_candidates_eliminated: usize,
+    pub primitive_tests: usize,
+}
+
 pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
     if objects.len() == 1 {
         let object = objects.into_iter().next().unwrap();
         let bbox = object.bounding_box().unwrap();
 
-        return BvhNode::Leaf { bbox, object };
+        return BvhNode::Leaf {
+            bbox,
+            object,
+            object_count: 1,
+        };
     };
     let boxes: Vec<Aabb> = objects
         .iter()
@@ -31,10 +45,12 @@ pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
     let left_objects = objects;
     let left = build_bvh(left_objects);
     let right = build_bvh(right_objects);
+    let object_count = left.object_count() + right.object_count();
     BvhNode::Node {
         bbox,
         left: Box::new(left),
         right: Box::new(right),
+        object_count,
     }
 }
 
@@ -43,44 +59,63 @@ pub enum BvhNode {
     Leaf {
         bbox: Aabb,
         object: Box<dyn Hittable>,
+        object_count: usize,
     },
     Node {
         bbox: Aabb,
         left: Box<BvhNode>,
         right: Box<BvhNode>,
+        object_count: usize,
     },
 }
 
 impl BvhNode {
-    fn intersect_with_limit(&self, ray: &Ray, max_t: f32, entry: f32) -> Option<Hit> {
+    pub fn object_count(&self) -> usize {
+        match self {
+            BvhNode::Leaf { object_count, .. } | BvhNode::Node { object_count, .. } => {
+                *object_count
+            }
+        }
+    }
+
+    pub(crate) fn intersect_with_stats(
+        &self,
+        ray: &Ray,
+        max_t: f32,
+        entry: f32,
+        stats: &mut TraversalStats,
+    ) -> Option<Hit> {
+        stats.bvh_nodes_tested += 1;
         if entry >= max_t {
+            stats.bvh_candidates_eliminated += self.object_count();
             return None;
         }
 
-        // We'll handle the children next.
         match self {
             BvhNode::Leaf { object, .. } => {
+                stats.primitive_tests += 1;
                 let hit = object.intersect(ray)?;
 
                 if hit.t < max_t { Some(hit) } else { None }
             }
 
             BvhNode::Node { left, right, .. } => {
-                let left_distance = left.bounding_box().unwrap().hit_distance(ray);
-                let right_distance = right.bounding_box().unwrap().hit_distance(ray);
+                let left_distance = self.child_entry(left, ray, stats);
+                let right_distance = self.child_entry(right, ray, stats);
 
                 match (left_distance, right_distance) {
                     (Some(left_t), Some(right_t)) => {
                         if left_t < right_t {
-                            let left_hit = left.intersect_with_limit(ray, max_t, left_t);
+                            let left_hit = left.intersect_with_stats(ray, max_t, left_t, stats);
 
                             let new_max_t = match &left_hit {
                                 Some(hit) => hit.t,
                                 None => max_t,
                             };
                             let right_hit = if right_t < new_max_t {
-                                right.intersect_with_limit(ray, new_max_t, right_t)
+                                right.intersect_with_stats(ray, new_max_t, right_t, stats)
                             } else {
+                                stats.bvh_candidates_eliminated += right.object_count();
                                 None
                             };
                             match (left_hit, right_hit) {
@@ -96,15 +131,16 @@ impl BvhNode {
                                 (None, None) => None,
                             }
                         } else {
-                            let right_hit = right.intersect_with_limit(ray, max_t, right_t);
+                            let right_hit = right.intersect_with_stats(ray, max_t, right_t, stats);
 
                             let new_max_t = match &right_hit {
                                 Some(hit) => hit.t,
                                 None => max_t,
                             };
                             let left_hit = if left_t < new_max_t {
-                                left.intersect_with_limit(ray, new_max_t, left_t)
+                                left.intersect_with_stats(ray, new_max_t, left_t, stats)
                             } else {
+                                stats.bvh_candidates_eliminated += left.object_count();
                                 None
                             };
 
@@ -123,12 +159,23 @@ impl BvhNode {
                         }
                     }
 
-                    (Some(left_t), None) => left.intersect_with_limit(ray, max_t, left_t),
+                    (Some(left_t), None) => left.intersect_with_stats(ray, max_t, left_t, stats),
 
-                    (None, Some(right_t)) => right.intersect_with_limit(ray, max_t, right_t),
+                    (None, Some(right_t)) => right.intersect_with_stats(ray, max_t, right_t, stats),
 
                     (None, None) => None,
                 }
+            }
+        }
+    }
+
+    fn child_entry(&self, child: &BvhNode, ray: &Ray, stats: &mut TraversalStats) -> Option<f32> {
+        stats.aabb_tests += 1;
+        match child.bounding_box().unwrap().hit_distance(ray) {
+            Some(entry) => Some(entry),
+            None => {
+                stats.aabb_candidates_eliminated += child.object_count();
+                None
             }
         }
     }
@@ -147,12 +194,14 @@ impl Positioned for BvhNode {
 
 impl Hittable for BvhNode {
     fn intersect(&self, ray: &Ray) -> Option<Hit> {
-        self.intersect_with_limit(
+        self.intersect_with_stats(
             ray,
             f32::INFINITY,
             self.bounding_box().unwrap().hit_distance(ray)?,
+            &mut TraversalStats::default(),
         )
     }
+
     fn bounding_box(&self) -> Option<Aabb> {
         match self {
             BvhNode::Leaf { bbox, .. } => Some(*bbox),
