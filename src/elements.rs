@@ -157,3 +157,156 @@ impl Positioned for Sphere {
         self.center = position;
     }
 }
+
+#[derive(Debug)]
+pub struct Triangle {
+    pub vertices: [Vec3; 3],
+    pub material: Material,
+}
+
+impl Triangle {
+    pub fn bounding_box(&self) -> Aabb {
+        let min = Vec3 {
+            x: self.vertices[0]
+                .x
+                .min(self.vertices[1].x)
+                .min(self.vertices[2].x),
+            y: self.vertices[0]
+                .y
+                .min(self.vertices[1].y)
+                .min(self.vertices[2].y),
+            z: self.vertices[0]
+                .z
+                .min(self.vertices[1].z)
+                .min(self.vertices[2].z),
+        };
+        let max = Vec3 {
+            x: self.vertices[0]
+                .x
+                .max(self.vertices[1].x)
+                .max(self.vertices[2].x),
+            y: self.vertices[0]
+                .y
+                .max(self.vertices[1].y)
+                .max(self.vertices[2].y),
+            z: self.vertices[0]
+                .z
+                .max(self.vertices[1].z)
+                .max(self.vertices[2].z),
+        };
+        Aabb { min, max }
+    }
+}
+
+impl Hittable for Triangle {
+    fn intersect(&self, ray: &Ray) -> Option<Hit> {
+        let edge1 = self.vertices[1].sub(self.vertices[0]);
+        let edge2 = self.vertices[2].sub(self.vertices[0]);
+        let pvec = ray.direction.cross(edge2);
+        let determinant = edge1.dot(pvec);
+
+        if determinant.abs() < 1e-6 {
+            return None;
+        }
+
+        let inverse_determinant = 1.0 / determinant;
+        let tvec = ray.origin.sub(self.vertices[0]);
+        let u = tvec.dot(pvec) * inverse_determinant;
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let qvec = tvec.cross(edge1);
+        let v = ray.direction.dot(qvec) * inverse_determinant;
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = edge2.dot(qvec) * inverse_determinant;
+        if t <= 0.0 {
+            return None;
+        }
+
+        let normal = edge1.cross(edge2).normalize();
+        Some(Hit {
+            t,
+            point: ray.at(t),
+            normal,
+            material: self.material,
+        })
+    }
+
+    fn bounding_box(&self) -> Option<Aabb> {
+        Some(self.bounding_box())
+    }
+}
+
+impl Positioned for Triangle {
+    fn position(&self) -> Vec3 {
+        self.vertices[0]
+            .add(self.vertices[1])
+            .add(self.vertices[2])
+            .scale(1.0 / 3.0)
+    }
+
+    fn set_position(&mut self, position: Vec3) {
+        let delta = position.sub(self.position());
+        for vertex in &mut self.vertices {
+            *vertex = vertex.add(delta);
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Mesh {
+    pub triangles: Vec<Triangle>,
+    pub bounds: Aabb,
+}
+
+impl Mesh {
+    pub fn new(triangles: Vec<Triangle>) -> Option<Self> {
+        let mut bounds = triangles.first()?.bounding_box();
+        for triangle in &triangles[1..] {
+            bounds = Aabb::surrounding(&bounds, &triangle.bounding_box());
+        }
+        Some(Self { triangles, bounds })
+    }
+}
+
+impl Hittable for Mesh {
+    fn intersect(&self, ray: &Ray) -> Option<Hit> {
+        let mut closest_hit = None;
+        for triangle in &self.triangles {
+            if let Some(hit) = triangle.intersect(ray) {
+                if closest_hit
+                    .as_ref()
+                    .map_or(true, |current: &Hit| hit.t < current.t)
+                {
+                    closest_hit = Some(hit);
+                }
+            }
+        }
+        closest_hit
+    }
+
+    fn bounding_box(&self) -> Option<Aabb> {
+        Some(self.bounds)
+    }
+}
+
+impl Positioned for Mesh {
+    fn position(&self) -> Vec3 {
+        self.bounds.min.add(self.bounds.max).scale(0.5)
+    }
+
+    fn set_position(&mut self, position: Vec3) {
+        let delta = position.sub(self.position());
+        for triangle in &mut self.triangles {
+            for vertex in &mut triangle.vertices {
+                *vertex = vertex.add(delta);
+            }
+        }
+        self.bounds.min = self.bounds.min.add(delta);
+        self.bounds.max = self.bounds.max.add(delta);
+    }
+}

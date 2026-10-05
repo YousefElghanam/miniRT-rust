@@ -9,4 +9,5 @@ timing = []
 
 [dependencies]
 pixels = "0.17.2"
+tobj = "4.0.2"
 winit = "0.30.13"

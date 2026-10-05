@@ -4,6 +4,7 @@ pub enum MiniRtErr {
     InvalidSceneFile,
     InvalidSceneFileExtension,
     InvalidNumberOfArguments,
+    Parse(String),
 }
 
 impl From<std::io::Error> for MiniRtErr {

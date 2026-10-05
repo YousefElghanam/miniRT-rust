@@ -1,8 +1,9 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::Path;
 
 use crate::constants::SCENE_FILE_EXTENSION;
-use crate::elements::{Light, Material, ObjType, Object, Plane, Point, Sphere};
+use crate::elements::{Light, Material, Mesh, ObjType, Object, Plane, Point, Sphere, Triangle};
 use crate::error::MiniRtErr;
 use crate::maths::build_bvh;
 use crate::maths::{Color, Vec3};
@@ -186,7 +187,146 @@ pub fn parse_line(line: &str, scene: &mut Scene) {
     // }
 }
 
+fn parse_obj_line(words: &[&str], base_dir: &Path, scene: &mut Scene) -> Result<(), MiniRtErr> {
+    if !(2..=5).contains(&words.len()) {
+        return Err(MiniRtErr::Parse(
+            "OBJ expects a path, with optional position, scale, and color".to_string(),
+        ));
+    }
+
+    let obj_path = base_dir.join(words[1]);
+    let position = words
+        .get(2)
+        .map(|value| parse_vec3(value))
+        .transpose()?
+        .unwrap_or(Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        });
+    let scale = words
+        .get(3)
+        .map(|value| value.parse::<f32>())
+        .transpose()
+        .map_err(|error| MiniRtErr::Parse(format!("invalid OBJ scale: {error}")))?
+        .unwrap_or(1.0);
+    let color = words
+        .get(4)
+        .map(|value| parse_color(value))
+        .transpose()?
+        .unwrap_or(Color {
+            r: 200,
+            g: 200,
+            b: 200,
+        });
+
+    let mesh = load_obj_mesh(&obj_path, position, scale, color)?;
+    scene.objects.push(Box::new(mesh));
+    Ok(())
+}
+
+fn parse_vec3(value: &str) -> Result<Vec3, MiniRtErr> {
+    let values: Vec<f32> = value
+        .split(',')
+        .map(|component| {
+            component
+                .parse()
+                .map_err(|error| MiniRtErr::Parse(format!("invalid vector '{value}': {error}")))
+        })
+        .collect::<Result<_, _>>()?;
+    if values.len() != 3 {
+        return Err(MiniRtErr::Parse(format!(
+            "expected three vector components: '{value}'"
+        )));
+    }
+    Ok(Vec3 {
+        x: values[0],
+        y: values[1],
+        z: values[2],
+    })
+}
+
+fn parse_color(value: &str) -> Result<Color, MiniRtErr> {
+    let vector = parse_vec3(value)?;
+    Ok(Color {
+        r: vector.x.clamp(0.0, 255.0) as u8,
+        g: vector.y.clamp(0.0, 255.0) as u8,
+        b: vector.z.clamp(0.0, 255.0) as u8,
+    })
+}
+
+pub fn load_obj_mesh(
+    path: &Path,
+    position: Vec3,
+    scale: f32,
+    color: Color,
+) -> Result<Mesh, MiniRtErr> {
+    let (models, _) = tobj::load_obj(
+        path,
+        &tobj::LoadOptions {
+            triangulate: true,
+            single_index: true,
+            ..Default::default()
+        },
+    )
+    .map_err(|error| {
+        MiniRtErr::Parse(format!("failed to load OBJ '{}': {error}", path.display()))
+    })?;
+
+    let mut triangles = Vec::new();
+    for model in models {
+        let mesh = model.mesh;
+        for indices in mesh.indices.chunks_exact(3) {
+            let vertices: [Vec3; 3] = indices
+                .iter()
+                .map(|&index| {
+                    let offset = index as usize * 3;
+                    Vec3 {
+                        x: mesh.positions[offset] * scale + position.x,
+                        y: mesh.positions[offset + 1] * scale + position.y,
+                        z: mesh.positions[offset + 2] * scale + position.z,
+                    }
+                })
+                .collect::<Vec<_>>()
+                .try_into()
+                .map_err(|_| {
+                    MiniRtErr::Parse("OBJ face did not contain exactly three indices".to_string())
+                })?;
+            triangles.push(Triangle {
+                vertices,
+                material: Material { color },
+            });
+        }
+    }
+
+    Mesh::new(triangles).ok_or_else(|| {
+        MiniRtErr::Parse(format!(
+            "OBJ '{}' does not contain any triangles",
+            path.display()
+        ))
+    })
+}
+
 pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
+    if path.ends_with(".obj") {
+        let mesh = load_obj_mesh(
+            Path::new(path),
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            1.0,
+            Color {
+                r: 200,
+                g: 200,
+                b: 200,
+            },
+        )?;
+        let mut scene = Scene::default();
+        scene.objects.push(Box::new(mesh));
+        return build_scene(scene);
+    }
     if !path.ends_with(SCENE_FILE_EXTENSION) {
         return Err(MiniRtErr::InvalidSceneFileExtension);
     }
@@ -194,6 +334,7 @@ pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
     match File::open(path) {
         Ok(file) => {
             let reader = BufReader::new(file);
+            let base_dir = Path::new(path).parent().unwrap_or_else(|| Path::new(""));
             for line in reader.lines() {
                 let mut line = line?.trim().to_string();
                 if let Some(pos) = line.find('#') {
@@ -202,30 +343,34 @@ pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
                 if line.len() == 0 {
                     continue;
                 }
-                parse_line(&line, &mut scene);
-            }
-            let mut bounded_objects = Vec::new();
-            let mut unbounded_objects = Vec::new();
-
-            for object in scene.objects {
-                if object.bounding_box().is_some() {
-                    bounded_objects.push(object);
+                let words: Vec<&str> = line.split_whitespace().collect();
+                if words.first() == Some(&"OBJ") {
+                    parse_obj_line(&words, base_dir, &mut scene)?;
                 } else {
-                    unbounded_objects.push(object);
+                    parse_line(&line, &mut scene);
                 }
             }
-            let bvh = if bounded_objects.is_empty() {
-                None
-            } else {
-                Some(build_bvh(bounded_objects))
-            };
-            return Ok(Scene {
-                bvh,
-                unbounded_objects,
-                objects: Vec::new(),
-                lights: scene.lights,
-            });
+            build_scene(scene)
         }
         Err(_) => Err(MiniRtErr::InvalidSceneFile),
     }
+}
+
+fn build_scene(scene: Scene) -> Result<Scene, MiniRtErr> {
+    let mut bounded_objects = Vec::new();
+    let mut unbounded_objects = Vec::new();
+    for object in scene.objects {
+        if object.bounding_box().is_some() {
+            bounded_objects.push(object);
+        } else {
+            unbounded_objects.push(object);
+        }
+    }
+    let bvh = (!bounded_objects.is_empty()).then(|| build_bvh(bounded_objects));
+    Ok(Scene {
+        bvh,
+        unbounded_objects,
+        objects: Vec::new(),
+        lights: scene.lights,
+    })
 }

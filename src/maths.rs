@@ -313,7 +313,7 @@ impl Aabb {
             return None;
         }
     }
-    fn surrounding(a: &Aabb, b: &Aabb) -> Aabb {
+    pub(crate) fn surrounding(a: &Aabb, b: &Aabb) -> Aabb {
         Aabb {
             min: Vec3 {
                 x: a.min.x.min(b.min.x),
