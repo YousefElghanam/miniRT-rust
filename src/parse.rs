@@ -5,7 +5,6 @@ use std::path::Path;
 use crate::constants::SCENE_FILE_EXTENSION;
 use crate::elements::{Light, Material, Mesh, ObjType, Object, Plane, Point, Sphere, Triangle};
 use crate::error::MiniRtErr;
-use crate::maths::build_bvh;
 use crate::maths::{Color, Vec3};
 use crate::scene::Scene;
 
@@ -356,21 +355,7 @@ pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
     }
 }
 
-fn build_scene(scene: Scene) -> Result<Scene, MiniRtErr> {
-    let mut bounded_objects = Vec::new();
-    let mut unbounded_objects = Vec::new();
-    for object in scene.objects {
-        if object.bounding_box().is_some() {
-            bounded_objects.push(object);
-        } else {
-            unbounded_objects.push(object);
-        }
-    }
-    let bvh = (!bounded_objects.is_empty()).then(|| build_bvh(bounded_objects));
-    Ok(Scene {
-        bvh,
-        unbounded_objects,
-        objects: Vec::new(),
-        lights: scene.lights,
-    })
+fn build_scene(mut scene: Scene) -> Result<Scene, MiniRtErr> {
+    scene.rebuild_acceleration();
+    Ok(scene)
 }

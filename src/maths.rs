@@ -1,7 +1,7 @@
 #[cfg(feature = "timing")]
 use std::time::Instant;
 
-use crate::elements::{Hittable, Material, Positioned};
+use crate::elements::{Hittable, Material};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct TraversalStats {
@@ -21,20 +21,20 @@ pub struct TraversalStats {
     pub primitive_time_ns: u128,
 }
 
-pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
-    if objects.len() == 1 {
-        let object = objects.into_iter().next().unwrap();
-        let bbox = object.bounding_box().unwrap();
+pub fn build_bvh(objects: &[Box<dyn Hittable>], mut indices: Vec<usize>) -> BvhNode {
+    if indices.len() == 1 {
+        let index = indices[0];
+        let bbox = objects[index].bounding_box().unwrap();
 
         return BvhNode::Leaf {
             bbox,
-            object,
+            index,
             object_count: 1,
         };
     };
-    let boxes: Vec<Aabb> = objects
+    let boxes: Vec<Aabb> = indices
         .iter()
-        .map(|object| object.bounding_box().unwrap())
+        .map(|&index| objects[index].bounding_box().unwrap())
         .collect();
 
     let bbox = Aabb::surrounding_all(&boxes);
@@ -46,16 +46,15 @@ pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
     } else {
         2
     };
-    objects.sort_by(|a, b| {
-        axis_value(&**a, axis)
-            .partial_cmp(&axis_value(&**b, axis))
+    indices.sort_by(|&a, &b| {
+        axis_value(&*objects[a], axis)
+            .partial_cmp(&axis_value(&*objects[b], axis))
             .unwrap()
     });
-    let mid = objects.len() / 2;
-    let right_objects = objects.split_off(mid);
-    let left_objects = objects;
-    let left = build_bvh(left_objects);
-    let right = build_bvh(right_objects);
+    let mid = indices.len() / 2;
+    let right_indices = indices.split_off(mid);
+    let left = build_bvh(objects, indices);
+    let right = build_bvh(objects, right_indices);
     let object_count = left.object_count() + right.object_count();
     BvhNode::Node {
         bbox,
@@ -69,7 +68,7 @@ pub fn build_bvh(mut objects: Vec<Box<dyn Hittable>>) -> BvhNode {
 pub enum BvhNode {
     Leaf {
         bbox: Aabb,
-        object: Box<dyn Hittable>,
+        index: usize,
         object_count: usize,
     },
     Node {
@@ -91,6 +90,7 @@ impl BvhNode {
 
     pub(crate) fn intersect_with_stats(
         &self,
+        objects: &[Box<dyn Hittable>],
         ray: &Ray,
         max_t: f32,
         entry: f32,
@@ -103,11 +103,11 @@ impl BvhNode {
         }
 
         match self {
-            BvhNode::Leaf { object, .. } => {
+            BvhNode::Leaf { index, .. } => {
                 stats.primitive_tests += 1;
                 #[cfg(feature = "timing")]
                 let start = Instant::now();
-                let hit = object.intersect(ray);
+                let hit = objects[*index].intersect(ray);
                 #[cfg(feature = "timing")]
                 {
                     stats.bvh_primitive_time_ns += start.elapsed().as_nanos();
@@ -126,14 +126,15 @@ impl BvhNode {
                 match (left_distance, right_distance) {
                     (Some(left_t), Some(right_t)) => {
                         if left_t < right_t {
-                            let left_hit = left.intersect_with_stats(ray, max_t, left_t, stats);
+                            let left_hit =
+                                left.intersect_with_stats(objects, ray, max_t, left_t, stats);
 
                             let new_max_t = match &left_hit {
                                 Some(hit) => hit.t,
                                 None => max_t,
                             };
                             let right_hit = if right_t < new_max_t {
-                                right.intersect_with_stats(ray, new_max_t, right_t, stats)
+                                right.intersect_with_stats(objects, ray, new_max_t, right_t, stats)
                             } else {
                                 stats.bvh_candidates_eliminated += right.object_count();
                                 None
@@ -151,14 +152,15 @@ impl BvhNode {
                                 (None, None) => None,
                             }
                         } else {
-                            let right_hit = right.intersect_with_stats(ray, max_t, right_t, stats);
+                            let right_hit =
+                                right.intersect_with_stats(objects, ray, max_t, right_t, stats);
 
                             let new_max_t = match &right_hit {
                                 Some(hit) => hit.t,
                                 None => max_t,
                             };
                             let left_hit = if left_t < new_max_t {
-                                left.intersect_with_stats(ray, new_max_t, left_t, stats)
+                                left.intersect_with_stats(objects, ray, new_max_t, left_t, stats)
                             } else {
                                 stats.bvh_candidates_eliminated += left.object_count();
                                 None
@@ -179,9 +181,13 @@ impl BvhNode {
                         }
                     }
 
-                    (Some(left_t), None) => left.intersect_with_stats(ray, max_t, left_t, stats),
+                    (Some(left_t), None) => {
+                        left.intersect_with_stats(objects, ray, max_t, left_t, stats)
+                    }
 
-                    (None, Some(right_t)) => right.intersect_with_stats(ray, max_t, right_t, stats),
+                    (None, Some(right_t)) => {
+                        right.intersect_with_stats(objects, ray, max_t, right_t, stats)
+                    }
 
                     (None, None) => None,
                 }
@@ -193,7 +199,7 @@ impl BvhNode {
         stats.aabb_tests += 1;
         #[cfg(feature = "timing")]
         let start = Instant::now();
-        let entry = child.bounding_box().unwrap().hit_distance(ray);
+        let entry = child.bounding_box().hit_distance(ray);
         #[cfg(feature = "timing")]
         {
             stats.aabb_time_ns += start.elapsed().as_nanos();
@@ -206,33 +212,11 @@ impl BvhNode {
             }
         }
     }
-}
 
-impl Positioned for BvhNode {
-    fn position(&self) -> Vec3 {
+    pub fn bounding_box(&self) -> Aabb {
         match self {
-            BvhNode::Leaf { bbox, .. } => bbox.min.add(bbox.max).scale(0.5),
-            BvhNode::Node { bbox, .. } => bbox.min.add(bbox.max).scale(0.5),
-        }
-    }
-
-    fn set_position(&mut self, _position: Vec3) {}
-}
-
-impl Hittable for BvhNode {
-    fn intersect(&self, ray: &Ray) -> Option<Hit> {
-        self.intersect_with_stats(
-            ray,
-            f32::INFINITY,
-            self.bounding_box().unwrap().hit_distance(ray)?,
-            &mut TraversalStats::default(),
-        )
-    }
-
-    fn bounding_box(&self) -> Option<Aabb> {
-        match self {
-            BvhNode::Leaf { bbox, .. } => Some(*bbox),
-            BvhNode::Node { bbox, .. } => Some(*bbox),
+            BvhNode::Leaf { bbox, .. } => *bbox,
+            BvhNode::Node { bbox, .. } => *bbox,
         }
     }
 }
@@ -411,9 +395,52 @@ impl Vec3 {
     pub fn cross(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.y * other.z - self.z * other.y,
-            y: self.x * other.z - self.z * other.x,
-            z: self.y * other.x - self.x * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_vec3_eq(actual: Vec3, expected: Vec3) {
+        let epsilon = 1e-5;
+        assert!(
+            (actual.x - expected.x).abs() < epsilon
+                && (actual.y - expected.y).abs() < epsilon
+                && (actual.z - expected.z).abs() < epsilon,
+            "expected ({}, {}, {}), got ({}, {}, {})",
+            expected.x,
+            expected.y,
+            expected.z,
+            actual.x,
+            actual.y,
+            actual.z
+        );
+    }
+
+    #[test]
+    fn cross_product_of_unit_axes() {
+        let i = Vec3 {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let j = Vec3 {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        };
+        let k = Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        };
+        assert_vec3_eq(i.cross(j), k);
+        assert_vec3_eq(j.cross(k), i);
+        assert_vec3_eq(k.cross(i), j);
     }
 }
 

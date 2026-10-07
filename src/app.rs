@@ -64,11 +64,15 @@ fn move_object(app: &mut App, dt: f32) {
         movement.x += speed * dt;
     }
 
-    if let Some(object) = app.scene.objects.first_mut() {
-        let previous_position = object.position();
-        object.set_position(previous_position.add(movement));
+    let moved = movement.length() > 0.0;
+    if moved {
+        if let Some(object) = app.scene.objects.first_mut() {
+            let previous_position = object.position();
+            object.set_position(previous_position.add(movement));
+        }
+        app.scene.rebuild_acceleration();
+        app.needs_render = true;
     }
-    app.needs_render = movement.length() > 0.0;
 }
 
 fn change_resolution(app: &mut App) {
@@ -226,7 +230,7 @@ pub fn create(scene: Scene) -> App {
         pixels: None,
         input: Input::default(),
         camera: Camera::default(),
-        needs_render: false,
+        needs_render: true,
         player: Player { x: 0.0, speed: 5.0 },
         frame_count: 0,
         last_fps_update: Instant::now(),

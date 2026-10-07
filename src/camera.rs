@@ -33,7 +33,7 @@ impl Camera {
         }
         .normalize();
 
-        let up = forward.cross(right).normalize();
+        let up = right.cross(forward).normalize();
 
         (forward, right, up)
     }
@@ -91,5 +91,21 @@ impl Default for Camera {
             yaw: 0.0,
             fov: 90.0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_basis_is_right_handed_fps() {
+        let camera = Camera::default();
+        let (forward, right, up) = camera.basis();
+        assert!((forward.x).abs() < 1e-5);
+        assert!((forward.y).abs() < 1e-5);
+        assert!((forward.z + 1.0).abs() < 1e-5);
+        assert!((right.x - 1.0).abs() < 1e-5);
+        assert!((up.y - 1.0).abs() < 1e-5);
     }
 }
