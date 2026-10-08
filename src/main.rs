@@ -5,10 +5,11 @@ mod camera;
 mod constants;
 mod elements;
 mod error;
+mod event_loop;
 mod input;
 mod maths;
 mod parse;
-mod render;
+mod player;
 mod renderer;
 mod scene;
 
@@ -17,17 +18,11 @@ use crate::parse::parse_scene_file;
 use crate::scene::Scene;
 
 fn log_scene_content(scene: &Scene) {
-    // let _ = scene.cones.iter().map(|cone| print!("{cone:?}"));
-    // let _ = scene.cylinders.iter().map(|cone| print!("{cone:?}"));
-    // let _ = scene.planes.iter().map(|cone| print!("{cone:?}"));
-    // println!("Spheres:");
-    // for sphere in &scene.spheres {
-    //     println!("{sphere:?}");
-    // }
-    // print!("\nLights:");
-    // for light in &scene.lights {
-    //     println!("{light:?}");
-    // }
+    print!("\nLights:");
+    for light in &scene.lights {
+        println!("{light:?}");
+    }
+    print!("\nObjects:");
     for object in &scene.objects {
         println!("{object:?}");
     }
@@ -35,17 +30,16 @@ fn log_scene_content(scene: &Scene) {
 
 fn main() -> Result<(), MiniRtErr> {
     let args: Vec<String> = env::args().collect();
-    let scene = match args.as_slice() {
+    let mut scene = match args.as_slice() {
         [_] => Scene::default(),
         [_, path] => {
             print!("Reading scene file... ");
-            let scene = parse_scene_file(path)?;
-            println!("Success");
-            scene
+            parse_scene_file(path)?
         }
         _ => return Err(MiniRtErr::InvalidNumberOfArguments),
     };
     log_scene_content(&scene);
-    render::render(scene);
+    scene.build_scene();
+    event_loop::render(scene);
     Ok(())
 }

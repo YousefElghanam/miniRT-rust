@@ -164,6 +164,11 @@ pub fn parse_line(line: &str, scene: &mut Scene) {
     if words.is_empty() {
         return;
     }
+    if words[0] == "OBJ" {
+        let mesh = parse_obj_line(&words);
+        scene.objects.push(Box::new(mesh));
+    }
+
     if words[0] == "LIGHT" {
         let light = parse_light_line(&words);
         scene.lights.push(light);
@@ -186,42 +191,41 @@ pub fn parse_line(line: &str, scene: &mut Scene) {
     // }
 }
 
-fn parse_obj_line(words: &[&str], base_dir: &Path, scene: &mut Scene) -> Result<(), MiniRtErr> {
+fn parse_obj_line(words: &[&str]) -> Mesh {
     if !(2..=5).contains(&words.len()) {
-        return Err(MiniRtErr::Parse(
-            "OBJ expects a path, with optional position, scale, and color".to_string(),
-        ));
+        panic!("OBJ expects a path, with optional position, scale, and color");
     }
 
-    let obj_path = base_dir.join(words[1]);
     let position = words
         .get(2)
         .map(|value| parse_vec3(value))
-        .transpose()?
-        .unwrap_or(Vec3 {
+        .unwrap_or(Ok(Vec3 {
             x: 0.0,
             y: 0.0,
             z: 0.0,
-        });
+        }))
+        .unwrap();
     let scale = words
         .get(3)
         .map(|value| value.parse::<f32>())
         .transpose()
-        .map_err(|error| MiniRtErr::Parse(format!("invalid OBJ scale: {error}")))?
-        .unwrap_or(1.0);
+        .map_err(|error| MiniRtErr::Parse(format!("invalid OBJ scale: {error}")))
+        .unwrap_or(Some(1.0))
+        .unwrap();
     let color = words
         .get(4)
         .map(|value| parse_color(value))
-        .transpose()?
-        .unwrap_or(Color {
+        .transpose()
+        .unwrap_or(Some(Color {
             r: 200,
             g: 200,
             b: 200,
-        });
-
-    let mesh = load_obj_mesh(&obj_path, position, scale, color)?;
-    scene.objects.push(Box::new(mesh));
-    Ok(())
+        }))
+        .unwrap();
+    match load_obj_mesh(Path::new(words[2]), position, scale, color) {
+        Ok(mesh) => mesh,
+        Err(_) => panic!("couldn't load obj mesh"),
+    }
 }
 
 fn parse_vec3(value: &str) -> Result<Vec3, MiniRtErr> {
@@ -307,33 +311,13 @@ pub fn load_obj_mesh(
 }
 
 pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
-    if path.ends_with(".obj") {
-        let mesh = load_obj_mesh(
-            Path::new(path),
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            1.0,
-            Color {
-                r: 200,
-                g: 200,
-                b: 200,
-            },
-        )?;
-        let mut scene = Scene::default();
-        scene.objects.push(Box::new(mesh));
-        return build_scene(scene);
-    }
     if !path.ends_with(SCENE_FILE_EXTENSION) {
         return Err(MiniRtErr::InvalidSceneFileExtension);
     }
-    let mut scene: Scene = Scene::default();
+    let mut scene: Scene = Scene::empty_default();
     match File::open(path) {
         Ok(file) => {
             let reader = BufReader::new(file);
-            let base_dir = Path::new(path).parent().unwrap_or_else(|| Path::new(""));
             for line in reader.lines() {
                 let mut line = line?.trim().to_string();
                 if let Some(pos) = line.find('#') {
@@ -342,20 +326,12 @@ pub fn parse_scene_file(path: &str) -> Result<Scene, MiniRtErr> {
                 if line.len() == 0 {
                     continue;
                 }
-                let words: Vec<&str> = line.split_whitespace().collect();
-                if words.first() == Some(&"OBJ") {
-                    parse_obj_line(&words, base_dir, &mut scene)?;
-                } else {
-                    parse_line(&line, &mut scene);
-                }
+                parse_line(&line, &mut scene);
             }
-            build_scene(scene)
+            Ok(scene)
         }
         Err(_) => Err(MiniRtErr::InvalidSceneFile),
     }
 }
 
-fn build_scene(mut scene: Scene) -> Result<Scene, MiniRtErr> {
-    scene.rebuild_acceleration();
-    Ok(scene)
-}
+// pub fn build_scene(mut scene: Scene) -> Result<Scene, MiniRtErr> {}

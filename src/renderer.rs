@@ -7,6 +7,14 @@ use crate::elements::Light;
 use crate::maths::{Color, Hit, Ray, TraversalStats, Vec3};
 use crate::scene::Scene;
 
+#[derive(Debug, Clone)]
+pub struct Renderer {
+    pub width: u32,
+    pub height: u32,
+    pub frame_buffer: Vec<u8>,
+    pub traversal_stats: TraversalStats,
+}
+
 pub fn calculate_lighting(
     hit: &Hit,
     light: &Light,
@@ -36,14 +44,6 @@ pub fn calculate_lighting(
     hit.normal.dot(light_direction).max(0.0)
 }
 
-#[derive(Debug, Clone)]
-pub struct Renderer {
-    pub width: u32,
-    pub height: u32,
-    pub frame_buffer: Vec<u8>,
-    pub traversal_stats: TraversalStats,
-}
-
 impl Renderer {
     pub fn new(width: u32, height: u32) -> Self {
         Self {
@@ -60,7 +60,7 @@ impl Renderer {
         let aspect_ratio = self.width as f32 / self.height as f32;
         let scale = (camera.fov.to_radians() / 2.0).tan();
         let screen_x = (u * 2.0 - 1.0) * aspect_ratio * scale;
-        let screen_y = 1.0 - v * 2.0 * scale;
+        let screen_y = (1.0 - v * 2.0) * scale;
 
         let (forward, right, up) = camera.basis();
         let direction = forward
@@ -121,27 +121,27 @@ impl Renderer {
             .bvh_time_ns
             .saturating_sub(self.traversal_stats.aabb_time_ns)
             .saturating_sub(self.traversal_stats.bvh_primitive_time_ns);
-        let total_candidates = self.traversal_stats.rays * scene.object_count();
-        let aabb_percentage = percentage(
-            self.traversal_stats.aabb_candidates_eliminated,
-            total_candidates,
-        );
-        let bvh_percentage = percentage(
-            self.traversal_stats.bvh_candidates_eliminated,
-            total_candidates,
-        );
-        println!(
-            "Traversal: AABB eliminated {} ({:.1}%), BVH eliminated {} ({:.1}%), primitive tests {} / {} candidates (AABB tests {}, BVH nodes {}, rays {})",
-            self.traversal_stats.aabb_candidates_eliminated,
-            aabb_percentage,
-            self.traversal_stats.bvh_candidates_eliminated,
-            bvh_percentage,
-            self.traversal_stats.primitive_tests,
-            total_candidates,
-            self.traversal_stats.aabb_tests,
-            self.traversal_stats.bvh_nodes_tested,
-            self.traversal_stats.rays,
-        );
+        // let total_candidates = self.traversal_stats.rays * scene.object_count();
+        // let aabb_percentage = percentage(
+        //     self.traversal_stats.aabb_candidates_eliminated,
+        //     total_candidates,
+        // );
+        // let bvh_percentage = percentage(
+        //     self.traversal_stats.bvh_candidates_eliminated,
+        //     total_candidates,
+        // );
+        // println!(
+        //     "Traversal: AABB eliminated {} ({:.1}%), BVH eliminated {} ({:.1}%), primitive tests {} / {} candidates (AABB tests {}, BVH nodes {}, rays {})",
+        //     self.traversal_stats.aabb_candidates_eliminated,
+        //     aabb_percentage,
+        //     self.traversal_stats.bvh_candidates_eliminated,
+        //     bvh_percentage,
+        //     self.traversal_stats.primitive_tests,
+        //     total_candidates,
+        //     self.traversal_stats.aabb_tests,
+        //     self.traversal_stats.bvh_nodes_tested,
+        //     self.traversal_stats.rays,
+        // );
         #[cfg(feature = "timing")]
         println!(
             "AABB intersection time: {:.3} ms",

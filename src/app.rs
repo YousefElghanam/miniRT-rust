@@ -4,24 +4,20 @@ use std::time::Instant;
 use pixels::{Pixels, SurfaceTexture};
 use winit::{
     application::ApplicationHandler,
-    event::{DeviceEvent, WindowEvent},
+    dpi::PhysicalSize,
+    event::{DeviceEvent, ElementState::Pressed, KeyEvent, WindowEvent},
     event_loop::ActiveEventLoop,
-    window::Window,
+    keyboard::{KeyCode, PhysicalKey},
+    window::{Window, WindowId},
 };
 
 use crate::camera::Camera;
-use crate::constants::{
-    RENDER_ASPECT_RATIO, RENDER_RES_H, RENDER_RES_W, WINDOW_HEIGHT, WINDOW_WIDTH,
-};
-use crate::input::{self, Input};
+use crate::constants::{MIN_RENDER_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::input::Input;
 use crate::maths::Vec3;
+use crate::player::Player;
 use crate::renderer::Renderer;
 use crate::scene::Scene;
-
-pub struct Player {
-    x: f32,
-    speed: f32,
-}
 
 pub struct App {
     pub scene: Scene,
@@ -31,6 +27,7 @@ pub struct App {
     pub input: Input,
     pub camera: Camera,
     pub needs_render: bool,
+    pub render_divisor: u32,
     pub player: Player,
     pub frame_count: u64,
     pub last_fps_update: Instant,
@@ -75,64 +72,75 @@ fn move_object(app: &mut App, dt: f32) {
     }
 }
 
-fn change_resolution(app: &mut App) {
-    let scale = if app.input.key_o && app.input.super_left {
-        Some(1.2)
-    } else if app.input.key_l && app.input.super_left {
-        Some(0.8)
-    } else {
-        None
-    };
-
-    let Some(scale) = scale else {
-        return;
-    };
-
-    let new_width = (app.renderer.width as f32 * scale) as u32;
-    let new_height = (new_width as f32 / RENDER_ASPECT_RATIO) as u32;
-    if !(60..=2000).contains(&new_width) {
+fn apply_render_resolution(app: &mut App, surface: PhysicalSize<u32>) {
+    let width = surface.width / app.render_divisor;
+    let height = surface.height / app.render_divisor;
+    if width == 0 || height == 0 {
         return;
     }
-
-    app.renderer.resize(new_width, new_height);
+    app.renderer.resize(width, height);
     if let Some(pixels) = app.pixels.as_mut() {
-        pixels.resize_buffer(new_width, new_height).unwrap();
+        pixels.resize_buffer(width, height).unwrap();
     }
-    println!("W:({new_width}) H:({new_height})");
+    println!(
+        "Render: W:({width}) H:({height}) divisor:({})",
+        app.render_divisor
+    );
+    app.needs_render = true;
+}
+
+fn change_resolution(app: &mut App) {
+    let Some(delta) = app.input.resolution_change.take() else {
+        return;
+    };
+    let Some(window) = app.window.as_ref() else {
+        return;
+    };
+    let surface = window.inner_size();
+
+    let Some(candidate) = app.render_divisor.checked_add_signed(delta) else {
+        return;
+    };
+    if candidate < 1 || surface.width / candidate < MIN_RENDER_WIDTH {
+        return;
+    }
+    app.render_divisor = candidate;
+    apply_render_resolution(app, surface);
+}
+
+fn move_camera(app: &mut App, dt: f32) {
+    let camera_movement = app.camera.movement(&app.input, 2.0, dt);
+    if !app.needs_render {
+        app.needs_render = camera_movement.length() > 0.0
+            || app.input.mouse_delta_x != 0.0
+            || app.input.mouse_delta_y != 0.0;
+    }
+    app.camera.position = app.camera.position.add(camera_movement);
+    app.camera.update(&app.input);
+    app.input.mouse_delta_x = 0.0;
+    app.input.mouse_delta_y = 0.0;
 }
 
 impl App {
     fn update(&mut self, dt: f32) {
         move_object(self, dt);
-        if self.input.res_up_pressed || self.input.res_down_pressed {
-            change_resolution(self);
-            self.input.res_up_pressed = false;
-            self.input.res_down_pressed = false;
-        }
+        change_resolution(self);
+        move_camera(self, dt);
 
-        let camera_movement = self.camera.movement(&self.input, 2.0, dt);
-        if !self.needs_render {
-            self.needs_render = camera_movement.length() > 0.0
-                || self.input.mouse_delta_x != 0.0
-                || self.input.mouse_delta_y != 0.0;
-        }
-
-        self.camera.position = self.camera.position.add(camera_movement);
-        self.camera.update(&self.input);
-        self.player.x += self.player.speed * dt;
-        self.input.mouse_delta_x = 0.0;
-        self.input.mouse_delta_y = 0.0;
-
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
+        // if let Some(window) = self.window.as_ref() {
+        //     window.request_redraw();
+        // }
+        // next line is similar to the one before, revisit diff to test ur rust knowledge
+        self.window
+            .as_ref()
+            .expect("window started after resumed()")
+            .request_redraw();
     }
 
     fn render_frame(&mut self) {
         if !self.needs_render {
             return;
         }
-
         let start = Instant::now();
         self.renderer.render(&self.scene, &self.camera);
         if let Some(frame) = self.pixels.as_mut() {
@@ -166,6 +174,53 @@ fn handle_redraw_request(app: &mut App) {
     app.render_frame();
 }
 
+fn handle_resize(app: &mut App, size: PhysicalSize<u32>) {
+    println!("W:({}) H:({})", size.width, size.height);
+    if size.width > 0 && size.height > 0 {
+        if let Some(pixels) = app.pixels.as_mut() {
+            pixels.resize_surface(size.width, size.height).unwrap();
+        }
+        apply_render_resolution(app, size);
+    }
+}
+
+pub fn handle_kb_input(app: &mut App, event: KeyEvent, event_loop: &ActiveEventLoop) {
+    match event.physical_key {
+        PhysicalKey::Code(key) => {
+            // if event.state == ElementState::Pressed {
+            //     println!("{:?}", key);
+            // }
+            match key {
+                KeyCode::Escape => {
+                    println!("exiting");
+                    event_loop.exit();
+                }
+                KeyCode::ArrowUp => app.input.arrow_up = event.state == Pressed,
+                KeyCode::ArrowDown => app.input.arrow_down = event.state == Pressed,
+                KeyCode::ArrowLeft => app.input.arrow_left = event.state == Pressed,
+                KeyCode::ArrowRight => app.input.arrow_right = event.state == Pressed,
+                KeyCode::SuperLeft => app.input.super_left = event.state == Pressed,
+                KeyCode::KeyW => app.input.key_w = event.state == Pressed,
+                KeyCode::KeyA => app.input.key_a = event.state == Pressed,
+                KeyCode::KeyS => app.input.key_s = event.state == Pressed,
+                KeyCode::KeyD => app.input.key_d = event.state == Pressed,
+                KeyCode::KeyO
+                    if app.input.super_left && event.state == Pressed && !event.repeat =>
+                {
+                    app.input.resolution_change = Some(-1)
+                }
+                KeyCode::KeyL
+                    if app.input.super_left && event.state == Pressed && !event.repeat =>
+                {
+                    app.input.resolution_change = Some(1);
+                }
+                _ => {}
+            }
+        }
+        _ => {}
+    }
+}
+
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         let window = Arc::new(
@@ -181,30 +236,23 @@ impl ApplicationHandler for App {
             SurfaceTexture::new(self.renderer.width, self.renderer.height, window.clone());
         let pixels =
             Pixels::new(self.renderer.width, self.renderer.height, surface_texture).unwrap();
+        let surface = window.inner_size();
         self.window = Some(window);
         self.pixels = Some(pixels);
+        apply_render_resolution(self, surface);
     }
 
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
-        _window_id: winit::window::WindowId,
+        _window_id: WindowId,
         event: WindowEvent,
     ) {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::KeyboardInput { event, .. } => {
-                input::handle_keyboard_input(self, event, event_loop)
-            }
             WindowEvent::RedrawRequested => handle_redraw_request(self),
-            WindowEvent::Resized(size) => {
-                println!("W:({}) H:({})", size.width, size.height);
-                if size.width > 0 && size.height > 0 {
-                    if let Some(pixels) = self.pixels.as_mut() {
-                        pixels.resize_surface(size.width, size.height).unwrap();
-                    }
-                }
-            }
+            WindowEvent::Resized(size) => handle_resize(self, size),
+            WindowEvent::KeyboardInput { event, .. } => handle_kb_input(self, event, event_loop),
             _ => {}
         }
     }
@@ -219,21 +267,5 @@ impl ApplicationHandler for App {
             self.input.mouse_delta_x += delta.0;
             self.input.mouse_delta_y += delta.1;
         }
-    }
-}
-
-pub fn create(scene: Scene) -> App {
-    App {
-        scene,
-        renderer: Renderer::new(RENDER_RES_W, RENDER_RES_H),
-        window: None,
-        pixels: None,
-        input: Input::default(),
-        camera: Camera::default(),
-        needs_render: true,
-        player: Player { x: 0.0, speed: 5.0 },
-        frame_count: 0,
-        last_fps_update: Instant::now(),
-        last_frame: Instant::now(),
     }
 }

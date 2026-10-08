@@ -1,5 +1,6 @@
-use crate::elements::{Hittable, Light};
-use crate::maths::{build_bvh, BvhNode, Hit, Ray, TraversalStats};
+use crate::elements::{Hittable, Light, Material, Plane, Sphere};
+use crate::error::MiniRtErr;
+use crate::maths::{BvhNode, Color, Hit, Ray, TraversalStats, Vec3, build_bvh};
 #[cfg(feature = "timing")]
 use std::time::Instant;
 
@@ -12,6 +13,64 @@ pub struct Scene {
 
 impl Default for Scene {
     fn default() -> Self {
+        let mut objects: Vec<Box<dyn Hittable>> = Vec::new();
+        objects.push(Box::new(Sphere {
+            radius: 1.0,
+            center: Vec3 {
+                x: -4.0,
+                y: 2.0,
+                z: -2.0,
+            },
+            material: Material {
+                color: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                },
+            },
+        }));
+        objects.push(Box::new(Plane {
+            point: Vec3 {
+                x: 0.0,
+                y: -5.0,
+                z: 0.0,
+            },
+            normal: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            material: Material {
+                color: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                },
+            },
+        }));
+        let mut lights: Vec<Light> = Vec::new();
+        lights.push(Light {
+            position: Vec3 {
+                x: 5.0,
+                y: 5.0,
+                z: 0.0,
+            },
+        });
+        Scene {
+            bvh: None,
+            unbounded_objects: vec![1],
+            objects,
+            lights,
+        }
+    }
+}
+
+impl Scene {
+    pub fn build_scene(&mut self) {
+        self.rebuild_acceleration();
+    }
+
+    pub fn empty_default() -> Self {
         Scene {
             bvh: None,
             unbounded_objects: Vec::new(),
@@ -19,9 +78,7 @@ impl Default for Scene {
             lights: Vec::new(),
         }
     }
-}
 
-impl Scene {
     pub fn rebuild_acceleration(&mut self) {
         let mut bounded_indices = Vec::new();
         let mut unbounded_indices = Vec::new();

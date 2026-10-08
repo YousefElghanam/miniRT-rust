@@ -15,7 +15,7 @@ impl Camera {
         self.pitch -= input.mouse_delta_y as f32 * self.sensetivity;
         self.pitch = self
             .pitch
-            .clamp(-std::f32::consts::FRAC_2_PI, std::f32::consts::FRAC_2_PI);
+            .clamp(-std::f32::consts::FRAC_PI_2, std::f32::consts::FRAC_PI_2);
         // println!("camera: yaw({}) == pitch({})", self.yaw, self.pitch);
     }
     pub fn basis(&self) -> (Vec3, Vec3, Vec3) {
@@ -89,7 +89,7 @@ impl Default for Camera {
             },
             pitch: 0.0,
             yaw: 0.0,
-            fov: 90.0,
+            fov: 120.0,
         }
     }
 }
